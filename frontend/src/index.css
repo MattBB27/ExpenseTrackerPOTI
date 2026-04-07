@@ -1,0 +1,114 @@
+/* index.css — Global reset and CSS custom properties */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+:root {
+  /* ── Colour palette ── */
+  --color-bg:           #0f1117;
+  --color-surface:      #1a1d27;
+  --color-surface-2:    #22263a;
+  --color-border:       #2e3250;
+  --color-primary:      #6c63ff;
+  --color-primary-dark: #574fd6;
+  --color-primary-glow: rgba(108, 99, 255, 0.20);
+  --color-accent:       #ff6584;
+  --color-success:      #43c98b;
+  --color-warning:      #f5a623;
+  --color-danger:       #ff4d6d;
+  --color-text:         #e8eaf6;
+  --color-text-muted:   #8b8fa8;
+
+  /* ── Typography ── */
+  --font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-size-xs:   0.75rem;
+  --font-size-sm:   0.875rem;
+  --font-size-base: 1rem;
+  --font-size-lg:   1.125rem;
+  --font-size-xl:   1.25rem;
+  --font-size-2xl:  1.5rem;
+  --font-size-3xl:  1.875rem;
+
+  /* ── Spacing ── */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+
+  /* ── Radii ── */
+  --radius-sm:  6px;
+  --radius-md:  10px;
+  --radius-lg:  16px;
+  --radius-xl:  24px;
+  --radius-full: 9999px;
+
+  /* ── Shadows ── */
+  --shadow-sm:  0 1px 3px rgba(0,0,0,0.4);
+  --shadow-md:  0 4px 16px rgba(0,0,0,0.5);
+  --shadow-lg:  0 8px 32px rgba(0,0,0,0.6);
+  --shadow-glow: 0 0 24px var(--color-primary-glow);
+
+  /* ── Transitions ── */
+  --transition-fast:   150ms ease;
+  --transition-normal: 250ms ease;
+  --transition-slow:   400ms ease;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--color-surface); }
+::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: var(--radius-full); }
+::-webkit-scrollbar-thumb:hover { background: var(--color-primary); }
+
+/* Utility classes */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+}
+
+/* Toast notification animations */
+@keyframes slideInRight {
+  from { transform: translateX(120%); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+/* Modal backdrop animation */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.92) translateY(-10px); opacity: 0; }
+  to   { transform: scale(1) translateY(0);        opacity: 1; }
+}

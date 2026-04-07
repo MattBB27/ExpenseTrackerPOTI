@@ -1,0 +1,69 @@
+/**
+ * models/Expense.js — Mongoose schema and model for an expense document.
+ */
+
+const mongoose = require("mongoose");
+
+// Allowed expense categories
+const CATEGORIES = [
+  "Food & Dining",
+  "Transport",
+  "Housing & Rent",
+  "Utilities",
+  "Entertainment",
+  "Healthcare",
+  "Shopping",
+  "Education",
+  "Travel",
+  "Other",
+];
+
+const expenseSchema = new mongoose.Schema(
+  {
+    title: {
+      type: String,
+      required: [true, "Title is required"],
+      trim: true,
+      maxlength: [100, "Title cannot exceed 100 characters"],
+    },
+
+    amount: {
+      type: Number,
+      required: [true, "Amount is required"],
+      min: [0.01, "Amount must be greater than 0"],
+    },
+
+    category: {
+      type: String,
+      required: [true, "Category is required"],
+      enum: {
+        values: CATEGORIES,
+        message: "{VALUE} is not a valid category",
+      },
+    },
+
+    date: {
+      type: Date,
+      required: [true, "Date is required"],
+      default: Date.now,
+    },
+
+    description: {
+      type: String,
+      trim: true,
+      maxlength: [500, "Description cannot exceed 500 characters"],
+      default: "",
+    },
+  },
+  {
+    // Automatically adds createdAt and updatedAt timestamps
+    timestamps: true,
+  }
+);
+
+// Export the list of valid categories so routes can use it
+expenseSchema.statics.CATEGORIES = CATEGORIES;
+
+const Expense = mongoose.model("Expense", expenseSchema);
+
+module.exports = Expense;
