@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 💰 ExpenseTracker
 
 A full-stack Single Page Application (SPA) for tracking personal expenses — built with **React + Vite**, **Node.js + Express**, and **MongoDB**.
@@ -232,3 +233,7 @@ curl -X POST http://localhost:5000/api/expenses \
 ## 📜 License
 
 This project was created as a university assignment. Free to use for educational purposes.
+=======
+# ExpenseTrackerPOTI
+Expense Tracker single-paged application for assignment 1
+>>>>>>> c1beec6687c65d0d2fdd66ac0a6d999fd88e4253

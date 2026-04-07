@@ -1,12 +1,20 @@
-# dependencies
+# Dependencies
 node_modules/
 
-# env files
+# Environment variables (never commit these)
 .env
 
-# build
+# Vite build output
 dist/
-build/
 
-# logs
+# Logs
+*.log
 npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE folders
+.vscode/
+.idea/
