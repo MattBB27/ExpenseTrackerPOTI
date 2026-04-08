@@ -1,18 +1,15 @@
-/**
- * components/ExpenseList.jsx — Displays expenses in a filterable table
- * (desktop) and card list (mobile). Handles filters and empty states.
- */
+// Displays expenses in a filterable table
 
 import React, { useMemo } from "react";
 import ExpenseItem from "./ExpenseItem";
 import { CATEGORIES, CATEGORY_COLORS } from "../app";
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// --- Helpers ---
 
 const fmt = (n) =>
   new Intl.NumberFormat("en-AU", { style: "currency", currency: "AUD" }).format(n ?? 0);
 
-/** Build a list of the last 12 months for the month filter */
+// List of the last 12 months for the month filter 
 function buildMonthOptions() {
   const options = [];
   const now = new Date();
@@ -27,7 +24,7 @@ function buildMonthOptions() {
 
 const MONTH_OPTIONS = buildMonthOptions();
 
-// ─── Component ────────────────────────────────────────────────────────────────
+// --- Component ---
 
 export default function ExpenseList({
   expenses,
@@ -48,7 +45,7 @@ export default function ExpenseList({
 
   return (
     <div className="expense-list-page">
-      {/* ── Header ── */}
+      {/* Header */}
       <div className="list-header">
         <div>
           <h2>All Expenses</h2>
@@ -58,7 +55,7 @@ export default function ExpenseList({
           </p>
         </div>
 
-        {/* ── Filters ── */}
+        {/* Filters */}
         <div className="filters">
           {/* Category filter */}
           <select
@@ -96,7 +93,7 @@ export default function ExpenseList({
         </div>
       </div>
 
-      {/* ── Empty state ── */}
+      {/* Empty state */}
       {expenses.length === 0 ? (
         <div className="empty-list">
           <span className="empty-list-icon">🔍</span>
@@ -113,7 +110,7 @@ export default function ExpenseList({
         </div>
       ) : (
         <>
-          {/* ── Desktop table ── */}
+          {/* Table */}
           <div className="expense-table-wrap">
             <table className="expense-table">
               <thead>
@@ -148,7 +145,7 @@ export default function ExpenseList({
             </div>
           </div>
 
-          {/* ── Mobile card list ── */}
+          {/* Card list */}
           <div className="expense-cards">
             {expenses.map((expense) => (
               <ExpenseItem

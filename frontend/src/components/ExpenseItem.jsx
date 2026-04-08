@@ -1,15 +1,12 @@
-/**
- * components/ExpenseItem.jsx — Renders a single expense.
- * Supports three modes:
- *   - asTableRow  → <tr> for the desktop table
- *   - compact     → minimal card (used on Dashboard recent list)
- *   - default     → full mobile card
- */
+// Renders a single expense.
+// Supports two modes:
+//   asTableRow = <tr> for the main table
+//   default    = full mobile card
 
 import React from "react";
 import { CATEGORY_COLORS } from "../app";
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// --- Helpers ---
 
 const fmt = (n) =>
   new Intl.NumberFormat("en-AU", { style: "currency", currency: "AUD" }).format(n ?? 0);
@@ -21,12 +18,12 @@ const fmtDate = (iso) =>
     year: "numeric",
   });
 
-// ─── Component ────────────────────────────────────────────────────────────────
+// --- Component ---
 
-export default function ExpenseItem({ expense, onEdit, onDelete, asTableRow, compact }) {
+export default function ExpenseItem({ expense, onEdit, onDelete, asTableRow }) {
   const color = CATEGORY_COLORS[expense.category] || "#8b8fa8";
 
-  // ── Table row (desktop) ──────────────────────────────────────────────────
+  // Table row 
 
   if (asTableRow) {
     return (
@@ -79,37 +76,9 @@ export default function ExpenseItem({ expense, onEdit, onDelete, asTableRow, com
     );
   }
 
-  // ── Compact card (Dashboard recent list) ─────────────────────────────────
 
-  if (compact) {
-    return (
-      <div className="expense-card">
-        <div className="expense-card-top">
-          <div>
-            <div style={{ fontWeight: 600 }}>{expense.title}</div>
-            <span className="category-badge" style={{ color, marginTop: "4px" }}>
-              <span
-                style={{
-                  width: 7,
-                  height: 7,
-                  borderRadius: "50%",
-                  background: color,
-                  display: "inline-block",
-                }}
-              />
-              {expense.category}
-            </span>
-          </div>
-          <div className="expense-card-amount">{fmt(expense.amount)}</div>
-        </div>
-        <div style={{ fontSize: "var(--font-size-xs)", color: "var(--color-text-muted)" }}>
-          {fmtDate(expense.date)}
-        </div>
-      </div>
-    );
-  }
 
-  // ── Full mobile card ─────────────────────────────────────────────────────
+  // Full mobile card
 
   return (
     <div className="expense-card">
