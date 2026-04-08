@@ -1,23 +1,15 @@
-/**
- * App.jsx — Root component.
- * Manages global state: expenses, summary, active tab, modal, toasts.
- */
+// Manages global state (expenses, summary, active tab, modal/expense form, toasts)
+
 
 import React, { useState, useEffect, useCallback } from "react";
 import Dashboard from "./components/Dashboard";
 import ExpenseList from "./components/ExpenseList";
 import ExpenseForm from "./components/ExpenseForm";
 import Toast from "./components/Toast";
-import {
-  getExpenses,
-  getSummary,
-  createExpense,
-  updateExpense,
-  deleteExpense,
-} from "./services/api";
-import "./App.css";
+import { getExpenses, getSummary, createExpense, updateExpense, deleteExpense } from "./services/api";
+import "./app.css";
 
-// ─── Constants ────────────────────────────────────────────────────────────────
+// --- Constants ---
 
 export const CATEGORIES = [
   "Food & Dining",
@@ -33,37 +25,34 @@ export const CATEGORIES = [
 ];
 
 export const CATEGORY_COLORS = {
-  "Food & Dining":   "#ff6b6b",
-  "Transport":       "#ffd166",
-  "Housing & Rent":  "#06d6a0",
-  "Utilities":       "#118ab2",
-  "Entertainment":   "#a855f7",
-  "Healthcare":      "#f77f00",
-  "Shopping":        "#ff6584",
-  "Education":       "#43c98b",
-  "Travel":          "#6c63ff",
-  "Other":           "#8b8fa8",
+  "Food & Dining": "#ff6b6b",
+  "Transport": "#ffd166",
+  "Housing & Rent": "#06d6a0",
+  "Utilities": "#118ab2",
+  "Entertainment": "#a855f7",
+  "Healthcare": "#f77f00",
+  "Shopping": "#ff6584",
+  "Education": "#43c98b",
+  "Travel": "#6c63ff",
+  "Other": "#8b8fa8",
 };
 
-// ─── App ─────────────────────────────────────────────────────────────────────
+// --- App ---
 
 export default function App() {
-  // ── State ──────────────────────────────────────────────────────────────────
-  const [expenses, setExpenses]       = useState([]);
-  const [summary, setSummary]         = useState(null);
-  const [loading, setLoading]         = useState(true);
-  const [apiError, setApiError]       = useState(null);
-
-  const [activeTab, setActiveTab]     = useState("dashboard"); // 'dashboard' | 'expenses'
-  const [modalOpen, setModalOpen]     = useState(false);
+  // State 
+  const [expenses, setExpenses] = useState([]);
+  const [summary, setSummary] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [apiError, setApiError] = useState(null);
+  const [activeTab, setActiveTab] = useState("dashboard"); // 'dashboard' | 'expenses' 
+  const [modalOpen, setModalOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState(null); // null = add mode
-
   const [filterCategory, setFilterCategory] = useState("");
-  const [filterMonth, setFilterMonth]       = useState("");
-
+  const [filterMonth, setFilterMonth] = useState("");
   const [toasts, setToasts] = useState([]);
 
-  // ── Toast helpers ──────────────────────────────────────────────────────────
+  // --- Toast helpers ---
 
   const addToast = useCallback((message, type = "success") => {
     const id = Date.now();
@@ -74,14 +63,14 @@ export default function App() {
     }, 3500);
   }, []);
 
-  // ── Data fetching ──────────────────────────────────────────────────────────
+  // --- Data fetching ---
 
   const fetchExpenses = useCallback(async () => {
     try {
       setApiError(null);
       const params = {};
       if (filterCategory) params.category = filterCategory;
-      if (filterMonth)    params.month    = filterMonth;
+      if (filterMonth) params.month = filterMonth;
       const data = await getExpenses(params);
       setExpenses(data);
     } catch (err) {
@@ -108,19 +97,19 @@ export default function App() {
     );
   }, [fetchExpenses, fetchSummary]);
 
-  // ── CRUD handlers ──────────────────────────────────────────────────────────
+  // --- CRUD handlers ---
 
   const handleSave = async (formData) => {
     try {
       if (editingExpense) {
-        // ── Update ──
+        // Update 
         const updated = await updateExpense(editingExpense._id, formData);
         setExpenses((prev) =>
           prev.map((e) => (e._id === updated._id ? updated : e))
         );
         addToast("Expense updated successfully!");
       } else {
-        // ── Create ──
+        // Create
         const created = await createExpense(formData);
         setExpenses((prev) => [created, ...prev]);
         addToast("Expense added successfully!");
@@ -161,11 +150,11 @@ export default function App() {
     setEditingExpense(null);
   };
 
-  // ── Render ─────────────────────────────────────────────────────────────────
+  // --- Render ---
 
   return (
     <div className="app">
-      {/* ── Header ── */}
+      {/* Header */}
       <header className="app-header">
         <div className="header-inner">
           <div className="logo">
@@ -197,7 +186,7 @@ export default function App() {
         </div>
       </header>
 
-      {/* ── Main content ── */}
+      {/* Main content */}
       <main className="app-main">
         {loading ? (
           <div className="loading-state">
@@ -238,7 +227,7 @@ export default function App() {
         )}
       </main>
 
-      {/* ── Add/Edit Modal ── */}
+      {/* Add/Edit Modal */}
       {modalOpen && (
         <ExpenseForm
           initialData={editingExpense}
@@ -247,7 +236,7 @@ export default function App() {
         />
       )}
 
-      {/* ── Toast stack ── */}
+      {/* Toast stack */}
       <div className="toast-container">
         {toasts.map((t) => (
           <Toast key={t.id} message={t.message} type={t.type} />

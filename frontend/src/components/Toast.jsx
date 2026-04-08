@@ -1,14 +1,11 @@
-/**
- * components/Toast.jsx — Single toast notification pill.
- * Rendered by the toast stack in App.jsx.
- */
+// Toast notifications - Rendered by the toast stack in App.jsx.
 
 import React from "react";
 
 const ICONS = {
   success: "✅",
-  error:   "❌",
-  info:    "ℹ️",
+  error: "❌",
+  info: "ℹ️",
 };
 
 export default function Toast({ message, type = "success" }) {
