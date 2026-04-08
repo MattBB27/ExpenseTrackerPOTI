@@ -126,7 +126,7 @@ export default function ExpenseList({
         </div>
       ) : (
         <>
-          {/* Table (desktop) */}
+          {/* Table */}
           <div className="expense-table-wrap">
             <table className="expense-table">
               <thead>
@@ -153,25 +153,6 @@ export default function ExpenseList({
 
             {/* Summary bar */}
             <div className="list-summary-bar">
-              <span>{filtered.length} expense{filtered.length !== 1 ? "s" : ""}</span>
-              <span>
-                Total:{" "}
-                <span className="list-summary-total">{fmt(totalFiltered)}</span>
-              </span>
-            </div>
-          </div>
-
-          {/* Card list (mobile) */}
-          <div className="expense-cards">
-            {filtered.map((expense) => (
-              <ExpenseItem
-                key={expense._id}
-                expense={expense}
-                onEdit={onEdit}
-                onDelete={onDelete}
-              />
-            ))}
-            <div className="list-summary-bar" style={{ borderRadius: "var(--radius-lg)" }}>
               <span>{filtered.length} expense{filtered.length !== 1 ? "s" : ""}</span>
               <span>
                 Total:{" "}
