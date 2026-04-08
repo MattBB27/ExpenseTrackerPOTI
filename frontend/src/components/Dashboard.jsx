@@ -1,4 +1,5 @@
-// Summary featuring expenses stats and charts
+// Summary featuring expenses stats and charts as well as 
+// supporting adding new expenses
 
 import React, { useMemo } from "react";
 import MonthlyChart from "./MonthlyChart";

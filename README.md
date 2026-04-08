@@ -63,12 +63,12 @@ expense-tracker/
 │       ├── index.css              # CSS variables and global reset
 │       ├── components/
 │       │   ├── Dashboard.jsx      # Summary cards + charts view
-│       │   ├── ExpenseList.jsx    # Filterable table/card list
-│       │   ├── ExpenseItem.jsx    # Single expense (table row or card)
+│       │   ├── ExpenseList.jsx    # Filterable table list
+│       │   ├── ExpenseItem.jsx    # Single expense (table row)
 │       │   ├── ExpenseForm.jsx    # Add/Edit modal with validation
 │       │   ├── MonthlyChart.jsx   # Bar chart (Chart.js)
 │       │   ├── CategoryChart.jsx  # Doughnut chart (Chart.js)
-│       │   └── Toast.jsx          # Notification pill
+│       │   └── Toast.jsx          # Notifications
 │       └── services/
 │           └── api.js             # Axios API service layer
 │
@@ -125,6 +125,13 @@ MONGO_URI=mongodb://localhost:27017/expense-tracker
 Option B: MongoDB Atlas (what I used)
 ```bash
 # Create a cluster and copy your connection string into .env (longer set-up)
+```
+Data seed for demo purposes. This is NOT required but RECOMMENDED when testing the application.
+You can run it AFTER you start with a blank expense list if you so wish 
+```bash
+# DISCLAIMER: you need to STOP running the backend if you wish to do this later. This will overwrite any EXISTING data.
+# May require a page refresh
+npm run seed
 ```
 ---
 

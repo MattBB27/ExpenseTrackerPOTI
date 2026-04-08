@@ -35,9 +35,8 @@ const seedExpenses = async () => {
         await mongoose.connect(MONGO_URI);
         console.log("Connected to MongoDB");
 
-        // 🔥 Clear existing data (optional)
+        // Clear existing data 
         await Expense.deleteMany();
-
         const sampleData = [];
 
         for (let i = 0; i < 20; i++) {

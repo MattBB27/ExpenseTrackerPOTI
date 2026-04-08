@@ -1,4 +1,4 @@
-// Manages global state (expenses, summary, active tab, modal/expense form, toasts)
+// Manages global state (expenses, summary, active tab, modal/expense form, toast notis)
 
 import React, { useState, useEffect, useCallback } from "react";
 import Dashboard from "./components/Dashboard";
