@@ -68,7 +68,7 @@ export default function ExpenseList({
       <div className="list-header">
         <div>
           <h2>All Expenses</h2>
-          <p style={{ color: "var(--color-text-muted)", fontSize: "var(--font-size-sm)", marginTop: "4px" }}>
+          <p style={{ color: "var(--color-text-muted)", fontSize: "var(--font-size-md)", marginTop: "4px" }}>
             {filtered.length} record{filtered.length !== 1 ? "s" : ""}
             {hasFilters && ` (filtered from ${expenses.length})`}
           </p>

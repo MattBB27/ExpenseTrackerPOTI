@@ -180,7 +180,7 @@ export default function ExpenseForm({ initialData, onSave, onClose }) {
                 id="amount"
                 name="amount"
                 type="number"
-                step="0.01"
+                step="1"
                 min="0.01"
                 className={`form-input ${errors.amount ? "error" : ""}`}
                 placeholder="0.00"

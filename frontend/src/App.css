@@ -363,14 +363,6 @@
   text-align: right;
 }
 
-/* Recent expenses on dashboard */
-.recent-expenses {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-5);
-}
-
 .section-header {
   display: flex;
   justify-content: space-between;
@@ -534,7 +526,7 @@
 }
 
 .expense-desc {
-  font-size: var(--font-size-xs);
+  font-size: var(--font-size-sm);
   color: var(--color-text-muted);
   margin-top: 2px;
   white-space: nowrap;
@@ -627,42 +619,9 @@
   color: var(--color-danger);
 }
 
-/* Mobile card view */
-.expense-cards {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
 
-.expense-card {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-4);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
 
-.expense-card-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-}
-
-.expense-card-amount {
-  font-size: var(--font-size-xl);
-  font-weight: 700;
-  color: var(--color-danger);
-}
-
-.expense-card-bottom {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-/* ─── Expense Form (Modal) ────────────────────────────────────────────────── */
+/* Expense Form (Modal) */
 
 .modal-overlay {
   position: fixed;
