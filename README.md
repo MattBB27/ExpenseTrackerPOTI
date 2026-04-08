@@ -119,7 +119,7 @@ PORT=5000
 
 Option A: Local MongoDB (Recommended)
 ```bash
-# Replace the string in .env with this
+# Replace the string in .env file with this
 MONGO_URI=mongodb://localhost:27017/expense-tracker
 ```
 Option B: MongoDB Atlas (what I used)
@@ -129,7 +129,8 @@ Option B: MongoDB Atlas (what I used)
 ---
 
 ### Step 4: Start backend server
-```
+```bash
+# Back to terminal expense-tracker/backend
 npm run dev
 ```
 
