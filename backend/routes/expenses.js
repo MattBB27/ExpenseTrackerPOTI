@@ -13,7 +13,7 @@ const Expense = require("../models/Expense");
 
 // --- Helpers --- 
 
-function validateObjectId(req, res, next) {
+function validateObjectId(req, res, next) { // used in PUT and DELETE 
   if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
     return res.status(400).json({ error: "Invalid expense ID format" });
   }
