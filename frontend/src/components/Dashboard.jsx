@@ -1,17 +1,14 @@
-/**
- * components/Dashboard.jsx — Summary view with stat cards, charts, and
- * a preview of the most recent expenses.
- */
+// Summary featuring expenses stats and charts
 
 import React, { useMemo } from "react";
 import MonthlyChart from "./MonthlyChart";
 import CategoryChart from "./CategoryChart";
 import ExpenseItem from "./ExpenseItem";
-import { CATEGORY_COLORS } from "../App";
+import { CATEGORY_COLORS } from "../app";
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// --- Helpers ---
 
-const fmt = (n) =>
+const format = (n) =>
   new Intl.NumberFormat("en-AU", { style: "currency", currency: "AUD" }).format(
     n ?? 0
   );
@@ -20,11 +17,11 @@ const currentMonthLabel = () => {
   return new Date().toLocaleString("default", { month: "long", year: "numeric" });
 };
 
-// ─── Component ────────────────────────────────────────────────────────────────
+// --- Component ---
 
 export default function Dashboard({ expenses, summary, onAddClick }) {
-  // ── Derived stats ──────────────────────────────────────────────────────────
 
+  // --- Derived stats ---
   const totalSpent = summary?.overallTotal ?? 0;
 
   const thisMonthTotal = useMemo(() => {
@@ -37,8 +34,16 @@ export default function Dashboard({ expenses, summary, onAddClick }) {
       .reduce((acc, e) => acc + e.amount, 0);
   }, [expenses]);
 
-  const avgPerExpense =
-    expenses.length > 0 ? totalSpent / expenses.length : 0;
+  const thisMonthExpenseCount = useMemo(() => {
+    const now = new Date();
+    return expenses.filter((e) => {
+      const d = new Date(e.date);
+      return (
+        d.getMonth() === now.getMonth() &&
+        d.getFullYear() === now.getFullYear()
+      );
+    }).length;
+  }, [expenses]);
 
   const topCategory = useMemo(() => {
     if (!summary?.categoryTotals?.length) return "—";
@@ -50,11 +55,7 @@ export default function Dashboard({ expenses, summary, onAddClick }) {
     return summary.categoryTotals[0].total;
   }, [summary]);
 
-  // Most recent 5 expenses for preview
-  const recentExpenses = expenses.slice(0, 5);
-
-  // ── Early empty state ──────────────────────────────────────────────────────
-
+  // --- Early empty state ---
   if (!expenses.length) {
     return (
       <div className="empty-dashboard">
@@ -82,27 +83,27 @@ export default function Dashboard({ expenses, summary, onAddClick }) {
       {/* ── Stat cards ── */}
       <div className="stat-cards">
         <div className="stat-card">
-          <div className="stat-card-icon">💸</div>
+          <div className="stat-card-icon">💵</div>
           <div className="stat-card-label">Total Spent (All Time)</div>
-          <div className="stat-card-value danger">{fmt(totalSpent)}</div>
+          <div className="stat-card-value danger">{format(totalSpent)}</div>
         </div>
 
         <div className="stat-card">
-          <div className="stat-card-icon">📅</div>
+          <div className="stat-card-icon">🗓️</div>
           <div className="stat-card-label">This Month</div>
-          <div className="stat-card-value warning">{fmt(thisMonthTotal)}</div>
+          <div className="stat-card-value warning">{format(thisMonthTotal)}</div>
         </div>
 
         <div className="stat-card">
-          <div className="stat-card-icon">🧾</div>
+          <div className="stat-card-icon">📋</div>
           <div className="stat-card-label">Total Expenses</div>
           <div className="stat-card-value primary">{expenses.length}</div>
         </div>
 
         <div className="stat-card">
-          <div className="stat-card-icon">📊</div>
-          <div className="stat-card-label">Avg per Expense</div>
-          <div className="stat-card-value success">{fmt(avgPerExpense)}</div>
+          <div className="stat-card-icon">💳</div>
+          <div className="stat-card-label">Expenses This Month</div>
+          <div className="stat-card-value success">{thisMonthExpenseCount}</div>
         </div>
       </div>
 
@@ -123,7 +124,7 @@ export default function Dashboard({ expenses, summary, onAddClick }) {
 
         {/* Doughnut chart */}
         <div className="chart-card">
-          <div className="chart-card-title">🥧 Spending by Category</div>
+          <div className="chart-card-title">🛒 Total Spending by Category</div>
           {summary?.categoryTotals?.length ? (
             <CategoryChart data={summary.categoryTotals} />
           ) : (
@@ -138,7 +139,7 @@ export default function Dashboard({ expenses, summary, onAddClick }) {
       {/* ── Category breakdown list ── */}
       {summary?.categoryTotals?.length > 0 && (
         <div className="chart-card">
-          <div className="chart-card-title">🏆 Top Spending Categories</div>
+          <div className="chart-card-title">🥇 Top Spending Categories</div>
           <div className="category-list">
             {summary.categoryTotals.slice(0, 6).map((cat) => (
               <div className="category-row" key={cat._id}>
@@ -156,29 +157,12 @@ export default function Dashboard({ expenses, summary, onAddClick }) {
                     }}
                   />
                 </div>
-                <span className="category-row-amount">{fmt(cat.total)}</span>
+                <span className="category-row-amount">{format(cat.total)}</span>
               </div>
             ))}
           </div>
         </div>
       )}
-
-      {/* ── Recent expenses ── */}
-      <div className="recent-expenses">
-        <div className="section-header">
-          <h3 className="section-title">🕐 Recent Expenses</h3>
-        </div>
-        <div className="expense-cards">
-          {recentExpenses.map((expense) => (
-            <ExpenseItem key={expense._id} expense={expense} compact />
-          ))}
-        </div>
-        {expenses.length === 0 && (
-          <p style={{ color: "var(--color-text-muted)", fontSize: "var(--font-size-sm)" }}>
-            No expenses to show.
-          </p>
-        )}
-      </div>
     </div>
   );
 }

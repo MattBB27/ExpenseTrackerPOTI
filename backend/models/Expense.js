@@ -1,7 +1,7 @@
-// models/Expense.js — Mongoose schema and model for an expense document.
+// Mongoose schema and model for an expense document.
 const mongoose = require("mongoose");
 
-// Allowed expense categories
+// Expense categories
 const CATEGORIES = [
   "Food & Dining",
   "Transport",
