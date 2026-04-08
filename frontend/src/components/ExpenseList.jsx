@@ -33,11 +33,11 @@ export default function ExpenseList({
   onDelete,
   onAddClick,
 }) {
-  // Filter state lives here — isolated from App and the Dashboard
+  // Filter state —isolated from the Dashboard
   const [filterCategory, setFilterCategory] = useState("");
   const [filterMonth, setFilterMonth] = useState("");
 
-  // Client-side filtering — no extra network requests
+  // Client-side filtering 
   const filtered = useMemo(() => {
     return expenses.filter((e) => {
       if (filterCategory && e.category !== filterCategory) return false;
