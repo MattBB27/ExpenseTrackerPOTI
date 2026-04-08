@@ -1,23 +1,18 @@
-/**
- * routes/expenses.js — CRUD API routes for expenses.
- *
- * GET    /api/expenses          → get all expenses (with optional filters)
- * GET    /api/expenses/summary  → category totals + monthly trends
- * POST   /api/expenses          → create a new expense
- * PUT    /api/expenses/:id      → update an existing expense
- * DELETE /api/expenses/:id      → delete an expense
- */
+// routes/expenses.js — CRUD API routes for expenses.
+//
+// GET    /api/expenses          → get all expenses (with optional filters)
+// GET    /api/expenses/summary  → category totals + monthly trends
+// POST   /api/expenses          → create a new expense
+// PUT    /api/expenses/:id      → update an existing expense
+// DELETE /api/expenses/:id      → delete an expense
 
 const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
 const Expense = require("../models/Expense");
 
-// ─── Helper ───────────────────────────────────────────────────────────────────
+// --- Helpers --- 
 
-/**
- * Validates a MongoDB ObjectId and returns 400 if invalid.
- */
 function validateObjectId(req, res, next) {
   if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
     return res.status(400).json({ error: "Invalid expense ID format" });
@@ -25,22 +20,19 @@ function validateObjectId(req, res, next) {
   next();
 }
 
-// ─── GET /api/expenses ────────────────────────────────────────────────────────
+// --- GET /api/expenses --- 
 
-/**
- * Retrieve all expenses.
- * Supports optional query filters: ?category=Food&month=2024-03
- */
+// Retrieve all expenses. Supports OPTIONAL query filters
 router.get("/", async (req, res) => {
   try {
     const filter = {};
 
-    // Filter by category
+    // Category filter
     if (req.query.category) {
       filter.category = req.query.category;
     }
 
-    // Filter by month (format: YYYY-MM)
+    // Month filter (YYYY-MM)
     if (req.query.month) {
       const [year, month] = req.query.month.split("-").map(Number);
       if (year && month) {
@@ -50,7 +42,6 @@ router.get("/", async (req, res) => {
         };
       }
     }
-
     const expenses = await Expense.find(filter).sort({ date: -1 });
     res.json(expenses);
   } catch (err) {
@@ -59,14 +50,9 @@ router.get("/", async (req, res) => {
   }
 });
 
-// ─── GET /api/expenses/summary ────────────────────────────────────────────────
+// --- GET /api/expenses/summary ---
 
-/**
- * Returns:
- *   - categoryTotals: total amount spent per category
- *   - monthlyTotals:  total amount spent per month (last 12 months)
- *   - overallTotal:   grand total of all expenses
- */
+// Return totals by category, month, or overall.
 router.get("/summary", async (req, res) => {
   try {
     // Category totals (all time)
@@ -81,12 +67,11 @@ router.get("/summary", async (req, res) => {
       { $sort: { total: -1 } },
     ]);
 
-    // Monthly totals — last 12 months
+    // Monthly totals (last 12 months)
     const twelveMonthsAgo = new Date();
     twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 11);
     twelveMonthsAgo.setDate(1);
     twelveMonthsAgo.setHours(0, 0, 0, 0);
-
     const monthlyTotals = await Expense.aggregate([
       { $match: { date: { $gte: twelveMonthsAgo } } },
       {
@@ -102,12 +87,11 @@ router.get("/summary", async (req, res) => {
       { $sort: { "_id.year": 1, "_id.month": 1 } },
     ]);
 
-    // Grand total
+    // Grand total (all time)
     const totalResult = await Expense.aggregate([
       { $group: { _id: null, total: { $sum: "$amount" } } },
     ]);
     const overallTotal = totalResult.length > 0 ? totalResult[0].total : 0;
-
     res.json({ categoryTotals, monthlyTotals, overallTotal });
   } catch (err) {
     console.error("GET /expenses/summary error:", err.message);
@@ -115,17 +99,12 @@ router.get("/summary", async (req, res) => {
   }
 });
 
-// ─── POST /api/expenses ───────────────────────────────────────────────────────
+// --- POST /api/expenses ---
 
-/**
- * Create a new expense.
- * Body: { title, amount, category, date, description }
- */
+// Creates a new expense (title, amount, category, date, description)
 router.post("/", async (req, res) => {
   try {
     const { title, amount, category, date, description } = req.body;
-
-    // Basic presence validation
     if (!title || !amount || !category || !date) {
       return res.status(400).json({
         error: "title, amount, category, and date are required",
@@ -147,29 +126,24 @@ router.post("/", async (req, res) => {
   }
 });
 
-// ─── PUT /api/expenses/:id ────────────────────────────────────────────────────
+// --- PUT /api/expenses/:id ---
 
-/**
- * Update an existing expense by ID.
- * Body: any subset of { title, amount, category, date, description }
- */
+// Update an existing expense using expense object/document ID.
 router.put("/:id", validateObjectId, async (req, res) => {
   try {
     const { title, amount, category, date, description } = req.body;
-
     const updated = await Expense.findByIdAndUpdate(
       req.params.id,
       { title, amount, category, date, description },
       {
-        new: true,          // return the updated document
-        runValidators: true, // enforce schema validation on update
+        new: true,            // return the updated document
+        runValidators: true,  // enforce schema validation 
       }
     );
 
     if (!updated) {
       return res.status(404).json({ error: "Expense not found" });
     }
-
     res.json(updated);
   } catch (err) {
     if (err.name === "ValidationError") {
@@ -181,11 +155,9 @@ router.put("/:id", validateObjectId, async (req, res) => {
   }
 });
 
-// ─── DELETE /api/expenses/:id ─────────────────────────────────────────────────
+// --- DELETE /api/expenses/:id ---
 
-/**
- * Delete an expense by ID.
- */
+// Delete an expense using expense object/document ID
 router.delete("/:id", validateObjectId, async (req, res) => {
   try {
     const deleted = await Expense.findByIdAndDelete(req.params.id);
@@ -193,7 +165,6 @@ router.delete("/:id", validateObjectId, async (req, res) => {
     if (!deleted) {
       return res.status(404).json({ error: "Expense not found" });
     }
-
     res.json({ message: "Expense deleted successfully", id: req.params.id });
   } catch (err) {
     console.error("DELETE /expenses/:id error:", err.message);

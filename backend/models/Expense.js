@@ -1,7 +1,4 @@
-/**
- * models/Expense.js — Mongoose schema and model for an expense document.
- */
-
+// models/Expense.js — Mongoose schema and model for an expense document.
 const mongoose = require("mongoose");
 
 // Allowed expense categories
@@ -56,14 +53,12 @@ const expenseSchema = new mongoose.Schema(
     },
   },
   {
-    // Automatically adds createdAt and updatedAt timestamps
+    // Automatic createdAt and updatedAt timestamps
     timestamps: true,
   }
 );
 
-// Export the list of valid categories so routes can use it
+// Export the list of valid categories so /routes can use it
 expenseSchema.statics.CATEGORIES = CATEGORIES;
-
 const Expense = mongoose.model("Expense", expenseSchema);
-
 module.exports = Expense;
