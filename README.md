@@ -83,7 +83,7 @@ expense-tracker/
 
 - **Node.js** v18 or later → https://nodejs.org
 - **MongoDB** — choose one:
-  - **Local:** Install from https://www.mongodb.com/try/download/community
+  - **Local:** (Recommended) Install from https://www.mongodb.com/try/download/community
   - **Cloud (Atlas):** Free tier at https://www.mongodb.com/atlas
 
 ---
