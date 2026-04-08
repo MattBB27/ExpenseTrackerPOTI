@@ -1,6 +1,5 @@
 // Manages global state (expenses, summary, active tab, modal/expense form, toasts)
 
-
 import React, { useState, useEffect, useCallback } from "react";
 import Dashboard from "./components/Dashboard";
 import ExpenseList from "./components/ExpenseList";
@@ -40,16 +39,14 @@ export const CATEGORY_COLORS = {
 // --- App ---
 
 export default function App() {
-  // State 
+  // State
   const [expenses, setExpenses] = useState([]);
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [apiError, setApiError] = useState(null);
-  const [activeTab, setActiveTab] = useState("dashboard"); // 'dashboard' | 'expenses' 
+  const [activeTab, setActiveTab] = useState("dashboard"); // 'dashboard' | 'expenses'
   const [modalOpen, setModalOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState(null); // null = add mode
-  const [filterCategory, setFilterCategory] = useState("");
-  const [filterMonth, setFilterMonth] = useState("");
   const [toasts, setToasts] = useState([]);
 
   // --- Toast helpers ---
@@ -57,28 +54,26 @@ export default function App() {
   const addToast = useCallback((message, type = "success") => {
     const id = Date.now();
     setToasts((prev) => [...prev, { id, message, type }]);
-    // Auto-remove after 3.5 s
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
     }, 3500);
   }, []);
 
   // --- Data fetching ---
+  // Always fetches ALL expenses — filtering is done client-side inside ExpenseList,
+  // so the Dashboard always receives the complete unfiltered data (due to issues caused by filtering expenses on Expenses tab)
 
   const fetchExpenses = useCallback(async () => {
     try {
       setApiError(null);
-      const params = {};
-      if (filterCategory) params.category = filterCategory;
-      if (filterMonth) params.month = filterMonth;
-      const data = await getExpenses(params);
+      const data = await getExpenses();
       setExpenses(data);
     } catch (err) {
       const msg = err.response?.data?.error || "Failed to load expenses";
       setApiError(msg);
       addToast(msg, "error");
     }
-  }, [filterCategory, filterMonth, addToast]);
+  }, [addToast]);
 
   const fetchSummary = useCallback(async () => {
     try {
@@ -89,7 +84,7 @@ export default function App() {
     }
   }, []);
 
-  // Initial load + reload when filters change
+  // Initial load only 
   useEffect(() => {
     setLoading(true);
     Promise.all([fetchExpenses(), fetchSummary()]).finally(() =>
@@ -102,19 +97,16 @@ export default function App() {
   const handleSave = async (formData) => {
     try {
       if (editingExpense) {
-        // Update 
         const updated = await updateExpense(editingExpense._id, formData);
         setExpenses((prev) =>
           prev.map((e) => (e._id === updated._id ? updated : e))
         );
         addToast("Expense updated successfully!");
       } else {
-        // Create
         const created = await createExpense(formData);
         setExpenses((prev) => [created, ...prev]);
         addToast("Expense added successfully!");
       }
-      // Refresh summary totals
       fetchSummary();
       closeModal();
     } catch (err) {
@@ -212,14 +204,11 @@ export default function App() {
               />
             )}
             {activeTab === "expenses" && (
+              // Pass the full expenses list
               <ExpenseList
                 expenses={expenses}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
-                filterCategory={filterCategory}
-                setFilterCategory={setFilterCategory}
-                filterMonth={filterMonth}
-                setFilterMonth={setFilterMonth}
                 onAddClick={openAddModal}
               />
             )}

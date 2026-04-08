@@ -1,15 +1,16 @@
-// Displays expenses in a filterable table
+// Displays expenses in a filterable table. (Seperate from the dashboard)
+// Filter is LOCAL to this component so the Dashboard always sees the full unfiltered data
 
-import React, { useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import ExpenseItem from "./ExpenseItem";
-import { CATEGORIES, CATEGORY_COLORS } from "../app";
+import { CATEGORIES } from "../app";
 
 // --- Helpers ---
 
 const fmt = (n) =>
   new Intl.NumberFormat("en-AU", { style: "currency", currency: "AUD" }).format(n ?? 0);
 
-// List of the last 12 months for the month filter 
+// List of the last 12 months for the month filter
 function buildMonthOptions() {
   const options = [];
   const now = new Date();
@@ -27,21 +28,39 @@ const MONTH_OPTIONS = buildMonthOptions();
 // --- Component ---
 
 export default function ExpenseList({
-  expenses,
+  expenses,   // full unfiltered list from App
   onEdit,
   onDelete,
-  filterCategory,
-  setFilterCategory,
-  filterMonth,
-  setFilterMonth,
   onAddClick,
 }) {
+  // Filter state lives here — isolated from App and the Dashboard
+  const [filterCategory, setFilterCategory] = useState("");
+  const [filterMonth, setFilterMonth] = useState("");
+
+  // Client-side filtering — no extra network requests
+  const filtered = useMemo(() => {
+    return expenses.filter((e) => {
+      if (filterCategory && e.category !== filterCategory) return false;
+      if (filterMonth) {
+        const d = new Date(e.date);
+        const monthStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+        if (monthStr !== filterMonth) return false;
+      }
+      return true;
+    });
+  }, [expenses, filterCategory, filterMonth]);
+
   const totalFiltered = useMemo(
-    () => expenses.reduce((acc, e) => acc + e.amount, 0),
-    [expenses]
+    () => filtered.reduce((acc, e) => acc + e.amount, 0),
+    [filtered]
   );
 
   const hasFilters = filterCategory || filterMonth;
+
+  const clearFilters = () => {
+    setFilterCategory("");
+    setFilterMonth("");
+  };
 
   return (
     <div className="expense-list-page">
@@ -50,8 +69,8 @@ export default function ExpenseList({
         <div>
           <h2>All Expenses</h2>
           <p style={{ color: "var(--color-text-muted)", fontSize: "var(--font-size-sm)", marginTop: "4px" }}>
-            {expenses.length} record{expenses.length !== 1 ? "s" : ""}
-            {hasFilters && " (filtered)"}
+            {filtered.length} record{filtered.length !== 1 ? "s" : ""}
+            {hasFilters && ` (filtered from ${expenses.length})`}
           </p>
         </div>
 
@@ -83,10 +102,7 @@ export default function ExpenseList({
 
           {/* Clear filters */}
           {hasFilters && (
-            <button
-              className="filter-clear"
-              onClick={() => { setFilterCategory(""); setFilterMonth(""); }}
-            >
+            <button className="filter-clear" onClick={clearFilters}>
               ✕ Clear
             </button>
           )}
@@ -94,7 +110,7 @@ export default function ExpenseList({
       </div>
 
       {/* Empty state */}
-      {expenses.length === 0 ? (
+      {filtered.length === 0 ? (
         <div className="empty-list">
           <span className="empty-list-icon">🔍</span>
           <p>
@@ -110,7 +126,7 @@ export default function ExpenseList({
         </div>
       ) : (
         <>
-          {/* Table */}
+          {/* Table (desktop) */}
           <div className="expense-table-wrap">
             <table className="expense-table">
               <thead>
@@ -123,7 +139,7 @@ export default function ExpenseList({
                 </tr>
               </thead>
               <tbody>
-                {expenses.map((expense) => (
+                {filtered.map((expense) => (
                   <ExpenseItem
                     key={expense._id}
                     expense={expense}
@@ -137,7 +153,7 @@ export default function ExpenseList({
 
             {/* Summary bar */}
             <div className="list-summary-bar">
-              <span>{expenses.length} expense{expenses.length !== 1 ? "s" : ""}</span>
+              <span>{filtered.length} expense{filtered.length !== 1 ? "s" : ""}</span>
               <span>
                 Total:{" "}
                 <span className="list-summary-total">{fmt(totalFiltered)}</span>
@@ -145,9 +161,9 @@ export default function ExpenseList({
             </div>
           </div>
 
-          {/* Card list */}
+          {/* Card list (mobile) */}
           <div className="expense-cards">
-            {expenses.map((expense) => (
+            {filtered.map((expense) => (
               <ExpenseItem
                 key={expense._id}
                 expense={expense}
@@ -156,7 +172,7 @@ export default function ExpenseList({
               />
             ))}
             <div className="list-summary-bar" style={{ borderRadius: "var(--radius-lg)" }}>
-              <span>{expenses.length} expense{expenses.length !== 1 ? "s" : ""}</span>
+              <span>{filtered.length} expense{filtered.length !== 1 ? "s" : ""}</span>
               <span>
                 Total:{" "}
                 <span className="list-summary-total">{fmt(totalFiltered)}</span>
