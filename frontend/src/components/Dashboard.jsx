@@ -72,15 +72,15 @@ export default function Dashboard({ expenses, summary, onAddClick }) {
     );
   }
 
-  // ── Render ─────────────────────────────────────────────────────────────────
+  // --- Render ---
 
   return (
     <div className="dashboard">
       <h1 className="dashboard-title">
-        Overview <span>— {currentMonthLabel()}</span>
+        Overview
       </h1>
 
-      {/* ── Stat cards ── */}
+      {/* Stat cards */}
       <div className="stat-cards">
         <div className="stat-card">
           <div className="stat-card-icon">💵</div>
@@ -107,7 +107,7 @@ export default function Dashboard({ expenses, summary, onAddClick }) {
         </div>
       </div>
 
-      {/* ── Charts grid ── */}
+      {/* Charts grid */}
       <div className="charts-grid">
         {/* Monthly bar chart */}
         <div className="chart-card">
@@ -136,7 +136,7 @@ export default function Dashboard({ expenses, summary, onAddClick }) {
         </div>
       </div>
 
-      {/* ── Category breakdown list ── */}
+      {/* Category breakdown list */}
       {summary?.categoryTotals?.length > 0 && (
         <div className="chart-card">
           <div className="chart-card-title">🥇 Top Spending Categories</div>

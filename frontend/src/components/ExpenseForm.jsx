@@ -1,20 +1,17 @@
-/**
- * components/ExpenseForm.jsx — Modal form for adding or editing an expense.
- * Includes client-side validation with inline error messages.
- */
+// Form for adding or editing an expense.
+// Client-side validation with built-in error messages.
 
 import React, { useState, useEffect, useRef } from "react";
 import { CATEGORIES } from "../app";
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// --- Helpers ---
 
-/** Format a Date object to the value expected by <input type="date"> */
 const toDateInputValue = (date) => {
   const d = date ? new Date(date) : new Date();
   return d.toISOString().split("T")[0];
 };
 
-// ── Validation ────────────────────────────────────────────────────────────────
+// --- Validation ---
 
 function validate(fields) {
   const errors = {};
@@ -46,49 +43,68 @@ function validate(fields) {
   return errors;
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
+// --- Component ---
 
 export default function ExpenseForm({ initialData, onSave, onClose }) {
   const isEditing = Boolean(initialData);
 
-  // ── Form state ─────────────────────────────────────────────────────────────
   const [fields, setFields] = useState({
-    title:       initialData?.title       ?? "",
-    amount:      initialData?.amount      ?? "",
-    category:    initialData?.category    ?? "",
-    date:        initialData?.date        ? toDateInputValue(initialData.date) : toDateInputValue(new Date()),
+    title: initialData?.title ?? "",
+    amount: initialData?.amount ?? "",
+    category: initialData?.category ?? "",
+    date: initialData?.date
+      ? toDateInputValue(initialData.date)
+      : toDateInputValue(new Date()),
     description: initialData?.description ?? "",
   });
 
-  const [errors, setErrors]   = useState({});
-  const [saving, setSaving]   = useState(false);
-
-  // Focus first field on mount
+  const [errors, setErrors] = useState({});
+  const [saving, setSaving] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
   const firstInputRef = useRef(null);
+
+  // Auto-focuses the title field when the form opens
   useEffect(() => {
     firstInputRef.current?.focus();
   }, []);
 
-  // Close on Escape key
+  // Escape key with confirmation
   useEffect(() => {
-    const handler = (e) => { if (e.key === "Escape") onClose(); };
+    const handler = (e) => {
+      if (e.key === "Escape") handleAttemptClose();
+    };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [onClose]);
+  }, [isDirty]);
 
-  // ── Handlers ───────────────────────────────────────────────────────────────
+  // Close with confirmation 
+  const handleAttemptClose = () => {
+    if (!isDirty) {
+      onClose();
+      return;
+    }
+    const confirmClose = window.confirm(
+      "Are you sure you want to cancel? Your changes will be lost."
+    );
+    if (confirmClose) {
+      onClose();
+    }
+  };
+
+  // --- Handlers ---
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+
     setFields((prev) => ({ ...prev, [name]: value }));
-    // Clear error for this field on change
+    setIsDirty(true); // 🔥 mark as changed
+
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: undefined }));
     }
   };
 
   const handleSubmit = async () => {
-    // Run validation
     const errs = validate(fields);
     if (Object.keys(errs).length > 0) {
       setErrors(errs);
@@ -98,10 +114,10 @@ export default function ExpenseForm({ initialData, onSave, onClose }) {
     setSaving(true);
     try {
       await onSave({
-        title:       fields.title.trim(),
-        amount:      parseFloat(fields.amount),
-        category:    fields.category,
-        date:        new Date(fields.date).toISOString(),
+        title: fields.title.trim(),
+        amount: parseFloat(fields.amount),
+        category: fields.category,
+        date: new Date(fields.date).toISOString(),
         description: fields.description.trim(),
       });
     } finally {
@@ -109,12 +125,11 @@ export default function ExpenseForm({ initialData, onSave, onClose }) {
     }
   };
 
-  // ── Render ─────────────────────────────────────────────────────────────────
+  // --- Render ---
 
   return (
     <div
       className="modal-overlay"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-title"
@@ -125,7 +140,11 @@ export default function ExpenseForm({ initialData, onSave, onClose }) {
           <h2 className="modal-title" id="modal-title">
             {isEditing ? "✏️ Edit Expense" : "➕ Add Expense"}
           </h2>
-          <button className="modal-close" onClick={onClose} aria-label="Close">
+          <button
+            className="modal-close"
+            onClick={handleAttemptClose}
+            aria-label="Close"
+          >
             ✕
           </button>
         </div>
@@ -184,10 +203,14 @@ export default function ExpenseForm({ initialData, onSave, onClose }) {
               >
                 <option value="">Select category…</option>
                 {CATEGORIES.map((c) => (
-                  <option key={c} value={c}>{c}</option>
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
                 ))}
               </select>
-              {errors.category && <span className="form-error">{errors.category}</span>}
+              {errors.category && (
+                <span className="form-error">{errors.category}</span>
+              )}
             </div>
           </div>
 
@@ -210,7 +233,10 @@ export default function ExpenseForm({ initialData, onSave, onClose }) {
           {/* Description */}
           <div className="form-field">
             <label className="form-label" htmlFor="description">
-              Description <span style={{ color: "var(--color-text-muted)" }}>(optional)</span>
+              Description{" "}
+              <span style={{ color: "var(--color-text-muted)" }}>
+                (optional)
+              </span>
             </label>
             <textarea
               id="description"
@@ -222,24 +248,41 @@ export default function ExpenseForm({ initialData, onSave, onClose }) {
               maxLength={500}
               rows={3}
             />
-            <span style={{ fontSize: "var(--font-size-xs)", color: "var(--color-text-muted)", textAlign: "right" }}>
+            <span
+              style={{
+                fontSize: "var(--font-size-xs)",
+                color: "var(--color-text-muted)",
+                textAlign: "right",
+              }}
+            >
               {fields.description.length} / 500
             </span>
-            {errors.description && <span className="form-error">{errors.description}</span>}
+            {errors.description && (
+              <span className="form-error">{errors.description}</span>
+            )}
           </div>
         </div>
 
         {/* Footer */}
         <div className="modal-footer">
-          <button className="btn-secondary" onClick={onClose} disabled={saving}>
+          <button
+            className="btn-secondary"
+            onClick={handleAttemptClose}
+            disabled={saving}
+          >
             Cancel
           </button>
+
           <button
             className="btn-primary"
             onClick={handleSubmit}
             disabled={saving}
           >
-            {saving ? "Saving…" : isEditing ? "Save Changes" : "Add Expense"}
+            {saving
+              ? "Saving…"
+              : isEditing
+                ? "Save Changes"
+                : "Add Expense"}
           </button>
         </div>
       </div>
