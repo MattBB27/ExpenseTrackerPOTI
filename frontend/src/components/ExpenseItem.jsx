@@ -7,7 +7,7 @@
  */
 
 import React from "react";
-import { CATEGORY_COLORS } from "../App";
+import { CATEGORY_COLORS } from "../app";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

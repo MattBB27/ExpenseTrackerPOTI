@@ -4,7 +4,7 @@
  */
 
 import React, { useState, useEffect, useRef } from "react";
-import { CATEGORIES } from "../App";
+import { CATEGORIES } from "../app";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

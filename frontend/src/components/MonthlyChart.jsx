@@ -1,7 +1,5 @@
-/**
- * components/MonthlyChart.jsx — Bar chart showing monthly spending totals
- * for the last 12 months. Uses react-chartjs-2 with Chart.js.
- */
+// Bar chart showing monthly spending totals for the last 12 months 
+// Uses react-chartjs-2 (react wrapper for Chart.js)
 
 import React from "react";
 import {
@@ -13,29 +11,25 @@ import {
   Legend,
 } from "chart.js";
 import { Bar } from "react-chartjs-2";
+import ChartDataLabels from "chartjs-plugin-datalabels";
 
-// Register required Chart.js components
-ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
+ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend, ChartDataLabels);
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// --- Helpers ---
 
 const MONTH_NAMES = [
   "Jan", "Feb", "Mar", "Apr", "May", "Jun",
   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
 ];
 
-/**
- * Converts the MongoDB aggregation result into Chart.js-compatible data.
- * Fills in zero for any missing months in the last 12.
- */
+// Converts MongoDB aggregation into data chart.js can use
 function buildChartData(rawData) {
-  // Build a map: "YYYY-M" → total
   const map = {};
   rawData.forEach(({ _id, total }) => {
     map[`${_id.year}-${_id.month}`] = total;
   });
 
-  // Generate last 12 months in order
+  // Generate last 12 months (chronological order)
   const labels = [];
   const values = [];
   const now = new Date();
@@ -50,10 +44,11 @@ function buildChartData(rawData) {
   return { labels, values };
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
+// --- Component ---
 
 export default function MonthlyChart({ data }) {
   const { labels, values } = buildChartData(data);
+  const max = Math.max(...values);
 
   const chartData = {
     labels,
@@ -61,21 +56,49 @@ export default function MonthlyChart({ data }) {
       {
         label: "Total Spent ($)",
         data: values,
-        backgroundColor: "rgba(108, 99, 255, 0.75)",
-        borderColor: "rgba(108, 99, 255, 1)",
-        borderWidth: 1,
+
+        // Current month highlighted
+        backgroundColor: values.map((v, i) =>
+          i === values.length - 1
+            ? "rgb(238, 61, 223)"
+            : "rgba(108, 99, 255, 0.6)"
+        ),
+
         borderRadius: 6,
         borderSkipped: false,
-        hoverBackgroundColor: "rgba(108, 99, 255, 1)",
+        maxBarThickness: 36,
       },
     ],
   };
 
   const options = {
     responsive: true,
-    maintainAspectRatio: true,
+    maintainAspectRatio: false,
+    layout: {
+      padding: {
+        top: 25
+      },
+    },
+
     plugins: {
+      datalabels: {
+        anchor: "end",
+        align: "top",
+        offset: 2,
+        clamp: true,
+        color: "#e8eaf6",
+        font: {
+          weight: "bold",
+          size: 11,
+        },
+        formatter: (value) => {
+          if (value === 0) return "";
+          return `$${value.toLocaleString()}`;
+        },
+      },
+
       legend: { display: false },
+
       tooltip: {
         backgroundColor: "#1a1d27",
         borderColor: "#2e3250",
@@ -84,26 +107,42 @@ export default function MonthlyChart({ data }) {
         bodyColor: "#8b8fa8",
         callbacks: {
           label: (ctx) =>
-            ` $${ctx.parsed.y.toLocaleString("en-AU", { minimumFractionDigits: 2 })}`,
+            ` $${ctx.parsed.y.toLocaleString("en-AU", {
+              minimumFractionDigits: 2,
+            })}`,
         },
       },
     },
+
     scales: {
       x: {
-        grid: { color: "#2e3250" },
-        ticks: { color: "#8b8fa8", font: { size: 11 } },
-      },
-      y: {
-        grid: { color: "#2e3250" },
+        grid: {
+          display: false,
+        },
         ticks: {
           color: "#8b8fa8",
-          font: { size: 11 },
+          font: { size: 13 },
+        },
+      },
+
+      y: {
+        beginAtZero: true,
+        suggestedMax: max * 1.1, // fix $ label not appearing 
+        grid: {
+          color: "rgba(46, 50, 80, 0.4)",
+        },
+        ticks: {
+          color: "#8b8fa8",
+          font: { size: 13 },
           callback: (v) => `$${v.toLocaleString()}`,
         },
-        beginAtZero: true,
       },
     },
   };
 
-  return <Bar data={chartData} options={options} />;
+  return (
+    <div style={{ height: "500px" }}>
+      <Bar data={chartData} options={options} />
+    </div>
+  );
 }

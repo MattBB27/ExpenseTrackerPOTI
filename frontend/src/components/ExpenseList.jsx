@@ -5,7 +5,7 @@
 
 import React, { useMemo } from "react";
 import ExpenseItem from "./ExpenseItem";
-import { CATEGORIES, CATEGORY_COLORS } from "../App";
+import { CATEGORIES, CATEGORY_COLORS } from "../app";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
