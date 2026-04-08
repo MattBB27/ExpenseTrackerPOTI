@@ -138,7 +138,15 @@ export default function ExpenseForm({ initialData, onSave, onClose }) {
         {/* Header */}
         <div className="modal-header">
           <h2 className="modal-title" id="modal-title">
-            {isEditing ? "✏️ Edit Expense" : "➕ Add Expense"}
+            {isEditing ? (
+              <>
+                <span role="img" aria-label="Edit">✏️</span> Edit Expense
+              </>
+            ) : (
+              <>
+                <span role="img" aria-label="Add">➕</span> Add Expense
+              </>
+            )}
           </h2>
           <button
             className="modal-close"
@@ -154,7 +162,7 @@ export default function ExpenseForm({ initialData, onSave, onClose }) {
           {/* Title */}
           <div className="form-field">
             <label className="form-label" htmlFor="title">
-              Title <span>*</span>
+              Title <span aria-hidden="true">*</span>
             </label>
             <input
               ref={firstInputRef}
@@ -174,7 +182,7 @@ export default function ExpenseForm({ initialData, onSave, onClose }) {
           <div className="form-row">
             <div className="form-field">
               <label className="form-label" htmlFor="amount">
-                Amount ($) <span>*</span>
+                Amount ($) <span aria-hidden="true">*</span>
               </label>
               <input
                 id="amount"
@@ -192,7 +200,7 @@ export default function ExpenseForm({ initialData, onSave, onClose }) {
 
             <div className="form-field">
               <label className="form-label" htmlFor="category">
-                Category <span>*</span>
+                Category <span aria-hidden="true">*</span>
               </label>
               <select
                 id="category"
@@ -234,7 +242,9 @@ export default function ExpenseForm({ initialData, onSave, onClose }) {
           <div className="form-field">
             <label className="form-label" htmlFor="description">
               Description{" "}
-              <span style={{ color: "var(--color-text-muted)" }}>
+              <span
+                style={{ color: "var(--color-text-muted)" }}
+                aria-label="optional field">
                 (optional)
               </span>
             </label>
@@ -258,7 +268,9 @@ export default function ExpenseForm({ initialData, onSave, onClose }) {
               {fields.description.length} / 500
             </span>
             {errors.description && (
-              <span className="form-error">{errors.description}</span>
+              <span className="form-error" role="alert">
+                {errors.description}
+              </span>
             )}
           </div>
         </div>

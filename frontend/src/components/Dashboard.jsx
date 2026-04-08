@@ -59,7 +59,13 @@ export default function Dashboard({ expenses, summary, onAddClick }) {
   if (!expenses.length) {
     return (
       <div className="empty-dashboard">
-        <span style={{ fontSize: "4rem" }}>📊</span>
+        <span
+          style={{ fontSize: "4rem" }}
+          role="img"
+          aria-label="Dashboard chart illustration"
+        >
+          📊
+        </span>
         <h2>No expenses yet</h2>
         <p>
           Start tracking your spending by adding your first expense. Your
@@ -83,25 +89,25 @@ export default function Dashboard({ expenses, summary, onAddClick }) {
       {/* Stat cards */}
       <div className="stat-cards">
         <div className="stat-card">
-          <div className="stat-card-icon">💵</div>
+          <div className="stat-card-icon" role="img" aria-label="Total spending">💵</div>
           <div className="stat-card-label">Total Spent (All Time)</div>
           <div className="stat-card-value danger">{format(totalSpent)}</div>
         </div>
 
         <div className="stat-card">
-          <div className="stat-card-icon">🗓️</div>
+          <div className="stat-card-icon" role="img" aria-label="Calendar">🗓️</div>
           <div className="stat-card-label">This Month</div>
           <div className="stat-card-value warning">{format(thisMonthTotal)}</div>
         </div>
 
         <div className="stat-card">
-          <div className="stat-card-icon">📋</div>
+          <div className="stat-card-icon" role="img" aria-label="Expense list">📋</div>
           <div className="stat-card-label">Total Expenses</div>
           <div className="stat-card-value primary">{expenses.length}</div>
         </div>
 
         <div className="stat-card">
-          <div className="stat-card-icon">💳</div>
+          <div className="stat-card-icon" role="img" aria-label="Card payments">💳</div>
           <div className="stat-card-label">Expenses This Month</div>
           <div className="stat-card-value success">{thisMonthExpenseCount}</div>
         </div>
@@ -111,12 +117,15 @@ export default function Dashboard({ expenses, summary, onAddClick }) {
       <div className="charts-grid">
         {/* Monthly bar chart */}
         <div className="chart-card">
-          <div className="chart-card-title">📈 Monthly Spending (Last 12 Months)</div>
+          <div className="chart-card-title">
+            <span role="img" aria-label="Growth chart">📈</span>
+            {" "}Monthly Spending (Last 12 Months)
+          </div>
           {summary?.monthlyTotals?.length ? (
             <MonthlyChart data={summary.monthlyTotals} />
           ) : (
             <div className="chart-empty">
-              <span className="chart-empty-icon">📉</span>
+              <span className="chart-empty-icon" role="img" aria-label="No data available">📉</span>
               Not enough data yet
             </div>
           )}
@@ -124,12 +133,14 @@ export default function Dashboard({ expenses, summary, onAddClick }) {
 
         {/* Doughnut chart */}
         <div className="chart-card">
-          <div className="chart-card-title">🛒 Total Spending by Category</div>
+          <div className="chart-card-title">
+            <span role="img" aria-label="Shopping categories">🛒</span>{" "}Total Spending by Category
+          </div>
           {summary?.categoryTotals?.length ? (
             <CategoryChart data={summary.categoryTotals} />
           ) : (
             <div className="chart-empty">
-              <span className="chart-empty-icon">📊</span>
+              <span className="chart-empty-icon" role="img" aria-label="No category data">📊</span>
               No category data
             </div>
           )}
@@ -139,7 +150,8 @@ export default function Dashboard({ expenses, summary, onAddClick }) {
       {/* Category breakdown list */}
       {summary?.categoryTotals?.length > 0 && (
         <div className="chart-card">
-          <div className="chart-card-title">🥇 Top Spending Categories</div>
+          <div className="chart-card-title"><span role="img" aria-label="Top category ranking">🥇</span>{" "}Top Spending Categories
+          </div>
           <div className="category-list">
             {summary.categoryTotals.slice(0, 6).map((cat) => (
               <div className="category-row" key={cat._id}>
