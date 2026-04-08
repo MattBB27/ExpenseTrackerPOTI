@@ -111,7 +111,7 @@ cp .env.example .env
 # OR
 copy .env.example .env 
 ```
-Ensure it contains THIS code:
+Open and ensure it contains this code. Select Option A or Option B and replace the 1st line:
 ```bash
 MONGO_URI=your_connection_string_here
 PORT=5000
@@ -143,8 +143,8 @@ npm run dev
 
 You should see:
 ```
-✅ Connected to MongoDB
-🚀 Server running on http://localhost:5000
+Connected to MongoDB
+Server running on http://localhost:5000
 ```
 ---
 
