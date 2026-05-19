@@ -14,6 +14,8 @@ const router = express.Router();
 const mongoose = require("mongoose");
 const Expense = require("../models/Expense");
 const { requireAuth } = require("../middleware/auth");
+const { logActivity } = require("../utils/logActivity");
+const { ACTIONS } = require("../models/UserActivity");
 
 // --- Helpers ---
 
@@ -134,6 +136,18 @@ router.post("/", requireAuth, async (req, res) => {
       description,
     });
     const saved = await expense.save();
+
+    logActivity({
+      userId: req.user._id,
+      action: ACTIONS.CREATE_EXPENSE,
+      metadata: {
+        expenseId: saved._id,
+        title: saved.title,
+        amount: saved.amount,
+        category: saved.category,
+      },
+    });
+
     res.status(201).json(saved);
   } catch (err) {
     if (err.name === "ValidationError") {
@@ -166,6 +180,18 @@ router.put("/:id", requireAuth, validateObjectId, async (req, res) => {
       // Return 404 in both cases — no information about other users' data.
       return res.status(404).json({ error: "Expense not found" });
     }
+
+    logActivity({
+      userId: req.user._id,
+      action: ACTIONS.UPDATE_EXPENSE,
+      metadata: {
+        expenseId: updated._id,
+        title: updated.title,
+        amount: updated.amount,
+        category: updated.category,
+      },
+    });
+
     res.json(updated);
   } catch (err) {
     if (err.name === "ValidationError") {
@@ -190,6 +216,18 @@ router.delete("/:id", requireAuth, validateObjectId, async (req, res) => {
     if (!deleted) {
       return res.status(404).json({ error: "Expense not found" });
     }
+
+    logActivity({
+      userId: req.user._id,
+      action: ACTIONS.DELETE_EXPENSE,
+      metadata: {
+        expenseId: deleted._id,
+        title: deleted.title,
+        amount: deleted.amount,
+        category: deleted.category,
+      },
+    });
+
     res.json({ message: "Expense deleted successfully", id: req.params.id });
   } catch (err) {
     console.error("DELETE /expenses/:id error:", err.message);

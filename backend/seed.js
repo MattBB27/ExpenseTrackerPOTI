@@ -12,6 +12,7 @@ const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const User = require("./models/User");
 const Expense = require("./models/Expense");
+const UserActivity = require("./models/UserActivity");
 
 dotenv.config();
 
@@ -52,10 +53,12 @@ async function seed() {
     await mongoose.connect(MONGO_URI);
     console.log("Connected to MongoDB");
 
-    // Wipe existing data so the seed is idempotent
+    // Wipe existing data so the seed is idempotent. Activity records are
+    // wiped too — they reference user IDs and would dangle after reseed.
     await Expense.deleteMany();
     await User.deleteMany();
-    console.log("Cleared existing users and expenses");
+    await UserActivity.deleteMany();
+    console.log("Cleared existing users, expenses, and activity records");
 
     // Create the two seed users
     const admin = new User({ username: "admin", role: "admin" });

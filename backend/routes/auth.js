@@ -10,6 +10,8 @@ const router = express.Router();
 const User = require("../models/User");
 const { signToken } = require("../utils/jwt");
 const { requireAuth } = require("../middleware/auth");
+const { logActivity } = require("../utils/logActivity");
+const { ACTIONS } = require("../models/UserActivity");
 
 // Minimum acceptable password length. Kept short and pragmatic for a uni
 // project; a real product would enforce a strength estimator like zxcvbn.
@@ -54,6 +56,8 @@ router.post("/register", async (req, res) => {
     await user.setPassword(password);
     await user.save();
 
+    logActivity({ userId: user._id, action: ACTIONS.REGISTER });
+
     const token = signToken(user);
     res.status(201).json({ token, user: publicUser(user) });
   } catch (err) {
@@ -94,6 +98,8 @@ router.post("/login", async (req, res) => {
     const ok = await user.verifyPassword(password);
     if (!ok) return genericFail();
 
+    logActivity({ userId: user._id, action: ACTIONS.LOGIN });
+
     const token = signToken(user);
     res.json({ token, user: publicUser(user) });
   } catch (err) {
@@ -105,9 +111,10 @@ router.post("/login", async (req, res) => {
 // --- POST /api/auth/logout ---
 
 // With JWTs stored client-side, logout is essentially the client deleting its
-// token. This endpoint is intentionally minimal — it exists so that Phase 5
-// can hook an activity-log entry in here without changing the API surface.
+// token. The server-side hit exists so we can record a LOGOUT activity entry
+// for the audit log; the response shape is unchanged.
 router.post("/logout", requireAuth, (req, res) => {
+  logActivity({ userId: req.user._id, action: ACTIONS.LOGOUT });
   res.json({ message: "Logged out" });
 });
 
