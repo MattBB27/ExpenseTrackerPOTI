@@ -1,38 +1,42 @@
 // routes/expenses.js — CRUD API routes for expenses.
 //
-// GET    /api/expenses          → get all expenses (with optional filters)
-// GET    /api/expenses/summary  → category totals + monthly trends
-// POST   /api/expenses          → create a new expense
-// PUT    /api/expenses/:id      → update an existing expense
-// DELETE /api/expenses/:id      → delete an expense
+// All routes require authentication (requireAuth middleware). Every query is
+// scoped to req.user._id so users only ever see and touch their own data.
+//
+// GET    /api/expenses          → list the current user's expenses (with filters)
+// GET    /api/expenses/summary  → category totals + monthly trends (current user)
+// POST   /api/expenses          → create a new expense for the current user
+// PUT    /api/expenses/:id      → update an expense (must belong to current user)
+// DELETE /api/expenses/:id      → delete an expense (must belong to current user)
 
 const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
 const Expense = require("../models/Expense");
+const { requireAuth } = require("../middleware/auth");
 
-// --- Helpers --- 
+// --- Helpers ---
 
-function validateObjectId(req, res, next) { // used in PUT and DELETE 
+function validateObjectId(req, res, next) {
   if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
     return res.status(400).json({ error: "Invalid expense ID format" });
   }
   next();
 }
 
-// --- GET /api/expenses --- 
+// --- GET /api/expenses ---
 
-// Retrieve all expenses. Supports OPTIONAL query filters
-router.get("/", async (req, res) => {
+// Return all expenses belonging to the current user.
+// Supports optional ?category= and ?month=YYYY-MM query filters.
+router.get("/", requireAuth, async (req, res) => {
   try {
-    const filter = {};
+    // Always scope to the logged-in user first
+    const filter = { user: req.user._id };
 
-    // Category filter
     if (req.query.category) {
       filter.category = req.query.category;
     }
 
-    // Month filter (YYYY-MM)
     if (req.query.month) {
       const [year, month] = req.query.month.split("-").map(Number);
       if (year && month) {
@@ -42,6 +46,7 @@ router.get("/", async (req, res) => {
         };
       }
     }
+
     const expenses = await Expense.find(filter).sort({ date: -1 });
     res.json(expenses);
   } catch (err) {
@@ -52,11 +57,17 @@ router.get("/", async (req, res) => {
 
 // --- GET /api/expenses/summary ---
 
-// Return totals by category, month, or overall.
-router.get("/summary", async (req, res) => {
+// Aggregate stats scoped to the current user:
+// - category totals (all time)
+// - monthly totals (last 12 months)
+// - overall total (all time)
+router.get("/summary", requireAuth, async (req, res) => {
   try {
-    // Category totals (all time)
+    const userId = req.user._id;
+
+    // Category totals (all time, current user only)
     const categoryTotals = await Expense.aggregate([
+      { $match: { user: userId } },
       {
         $group: {
           _id: "$category",
@@ -67,13 +78,14 @@ router.get("/summary", async (req, res) => {
       { $sort: { total: -1 } },
     ]);
 
-    // Monthly totals (last 12 months)
+    // Monthly totals (last 12 months, current user only)
     const twelveMonthsAgo = new Date();
     twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 11);
     twelveMonthsAgo.setDate(1);
     twelveMonthsAgo.setHours(0, 0, 0, 0);
+
     const monthlyTotals = await Expense.aggregate([
-      { $match: { date: { $gte: twelveMonthsAgo } } },
+      { $match: { user: userId, date: { $gte: twelveMonthsAgo } } },
       {
         $group: {
           _id: {
@@ -87,11 +99,13 @@ router.get("/summary", async (req, res) => {
       { $sort: { "_id.year": 1, "_id.month": 1 } },
     ]);
 
-    // Grand total (all time)
+    // Grand total (all time, current user only)
     const totalResult = await Expense.aggregate([
+      { $match: { user: userId } },
       { $group: { _id: null, total: { $sum: "$amount" } } },
     ]);
     const overallTotal = totalResult.length > 0 ? totalResult[0].total : 0;
+
     res.json({ categoryTotals, monthlyTotals, overallTotal });
   } catch (err) {
     console.error("GET /expenses/summary error:", err.message);
@@ -101,8 +115,8 @@ router.get("/summary", async (req, res) => {
 
 // --- POST /api/expenses ---
 
-// Creates a new expense (title, amount, category, date, description)
-router.post("/", async (req, res) => {
+// Create a new expense owned by the current user.
+router.post("/", requireAuth, async (req, res) => {
   try {
     const { title, amount, category, date, description } = req.body;
     if (!title || !amount || !category || !date) {
@@ -111,12 +125,17 @@ router.post("/", async (req, res) => {
       });
     }
 
-    const expense = new Expense({ title, amount, category, date, description });
+    const expense = new Expense({
+      user: req.user._id,
+      title,
+      amount,
+      category,
+      date,
+      description,
+    });
     const saved = await expense.save();
-
     res.status(201).json(saved);
   } catch (err) {
-    // Mongoose validation error
     if (err.name === "ValidationError") {
       const messages = Object.values(err.errors).map((e) => e.message);
       return res.status(400).json({ error: messages.join(", ") });
@@ -128,20 +147,23 @@ router.post("/", async (req, res) => {
 
 // --- PUT /api/expenses/:id ---
 
-// Update an existing expense using expense object/document ID.
-router.put("/:id", validateObjectId, async (req, res) => {
+// Update an expense. The query matches on BOTH _id AND user so a user cannot
+// edit another user's expense even if they know its ID.
+router.put("/:id", requireAuth, validateObjectId, async (req, res) => {
   try {
     const { title, amount, category, date, description } = req.body;
-    const updated = await Expense.findByIdAndUpdate(
-      req.params.id,
+    const updated = await Expense.findOneAndUpdate(
+      { _id: req.params.id, user: req.user._id },
       { title, amount, category, date, description },
       {
-        new: true,            // return the updated document
-        runValidators: true,  // enforce schema validation 
+        new: true,           // return the updated document
+        runValidators: true, // enforce schema validation on update
       }
     );
 
     if (!updated) {
+      // Either the expense doesn't exist or it belongs to someone else.
+      // Return 404 in both cases — no information about other users' data.
       return res.status(404).json({ error: "Expense not found" });
     }
     res.json(updated);
@@ -157,10 +179,13 @@ router.put("/:id", validateObjectId, async (req, res) => {
 
 // --- DELETE /api/expenses/:id ---
 
-// Delete an expense using expense object/document ID
-router.delete("/:id", validateObjectId, async (req, res) => {
+// Delete an expense. Same ownership enforcement as PUT above.
+router.delete("/:id", requireAuth, validateObjectId, async (req, res) => {
   try {
-    const deleted = await Expense.findByIdAndDelete(req.params.id);
+    const deleted = await Expense.findOneAndDelete({
+      _id: req.params.id,
+      user: req.user._id,
+    });
 
     if (!deleted) {
       return res.status(404).json({ error: "Expense not found" });

@@ -17,6 +17,16 @@ const CATEGORIES = [
 
 const expenseSchema = new mongoose.Schema(
   {
+    // Owner of this expense. All queries filter by this field so every user
+    // only ever sees and modifies their own data. Indexed because it appears
+    // in every single query.
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+      index: true,
+    },
+
     title: {
       type: String,
       required: [true, "Title is required"],

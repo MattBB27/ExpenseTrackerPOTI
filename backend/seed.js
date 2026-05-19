@@ -1,20 +1,22 @@
-// Seed script for the expenses collection.
-// Wipes existing expenses and inserts ~25 realistic sample records spread
-// across the last 6 months so the dashboard and charts have something to show.
+// Seed script — wipes users + expenses and inserts demo data.
 //
-// Usage: npm run seed   (stop the backend first; this overwrites existing data)
+// Creates two accounts:
+//   admin / admin123  (role: admin)
+//   demo  / demo123   (role: user)
+//
+// Then seeds 25 realistic expenses split between them.
+//
+// Usage: npm run seed   (run from backend/, requires .env to be set up)
 
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
+const User = require("./models/User");
 const Expense = require("./models/Expense");
 
 dotenv.config();
 
 const MONGO_URI = process.env.MONGO_URI;
 
-// Pool of realistic titles keyed by category. Picking from these (rather than
-// "<Category> expense") gives us variety so the live search added later has
-// something meaningful to filter on.
 const SAMPLE_TITLES = {
   "Food & Dining":  ["Grocery run", "Coffee with friends", "Dinner takeout", "Weekly groceries", "Brunch"],
   "Transport":      ["Uber ride", "Petrol fill-up", "Train pass", "Bus fare", "Airport taxi"],
@@ -30,11 +32,9 @@ const SAMPLE_TITLES = {
 
 const CATEGORIES = Object.keys(SAMPLE_TITLES);
 
-// Random integer in [min, max] inclusive
 const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
 const pick = (arr) => arr[rand(0, arr.length - 1)];
 
-// Generate a date `monthsAgo` months ago on a random day (1-28 to avoid Feb edge cases).
 const generateDate = (monthsAgo) => {
   const d = new Date();
   d.setMonth(d.getMonth() - monthsAgo);
@@ -42,7 +42,7 @@ const generateDate = (monthsAgo) => {
   return d;
 };
 
-async function seedExpenses() {
+async function seed() {
   if (!MONGO_URI) {
     console.error("MONGO_URI is not set. Create backend/.env from .env.example first.");
     process.exit(1);
@@ -52,13 +52,32 @@ async function seedExpenses() {
     await mongoose.connect(MONGO_URI);
     console.log("Connected to MongoDB");
 
+    // Wipe existing data so the seed is idempotent
     await Expense.deleteMany();
-    console.log("Cleared existing expenses");
+    await User.deleteMany();
+    console.log("Cleared existing users and expenses");
 
-    const sampleData = [];
+    // Create the two seed users
+    const admin = new User({ username: "admin", role: "admin" });
+    await admin.setPassword("admin123");
+    await admin.save();
+
+    const demo = new User({ username: "demo", role: "user" });
+    await demo.setPassword("demo123");
+    await demo.save();
+
+    console.log("Created seed users");
+
+    // Generate 25 expenses alternating between the two users so both
+    // accounts have data to explore
+    const users = [admin, demo];
+    const expenses = [];
+
     for (let i = 0; i < 25; i++) {
+      const owner = users[i % 2];
       const category = pick(CATEGORIES);
-      sampleData.push({
+      expenses.push({
+        user: owner._id,
         title: pick(SAMPLE_TITLES[category]),
         amount: rand(5, 500),
         category,
@@ -67,8 +86,13 @@ async function seedExpenses() {
       });
     }
 
-    await Expense.insertMany(sampleData);
-    console.log(`Seeded ${sampleData.length} sample expenses`);
+    await Expense.insertMany(expenses);
+    console.log(`Seeded ${expenses.length} expenses`);
+
+    console.log("\nSeed accounts:");
+    console.log("  username: admin   password: admin123   role: admin");
+    console.log("  username: demo    password: demo123    role: user");
+
     process.exit(0);
   } catch (err) {
     console.error("Seed error:", err.message);
@@ -76,4 +100,4 @@ async function seedExpenses() {
   }
 }
 
-seedExpenses();
+seed();
