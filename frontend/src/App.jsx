@@ -6,7 +6,7 @@ import ExpenseList from "./components/ExpenseList";
 import ExpenseForm from "./components/ExpenseForm";
 import Toast from "./components/Toast";
 import { getExpenses, getSummary, createExpense, updateExpense, deleteExpense } from "./services/api";
-import "./app.css";
+import "./App.css";
 
 // --- Constants ---
 

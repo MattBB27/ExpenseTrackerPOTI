@@ -3,7 +3,7 @@
 
 import React, { useState, useMemo } from "react";
 import ExpenseItem from "./ExpenseItem";
-import { CATEGORIES } from "../app";
+import { CATEGORIES } from "../App";
 
 // --- Helpers ---
 
@@ -126,7 +126,7 @@ export default function ExpenseList({
         </div>
       ) : (
         <>
-          {/* Table */}
+          {/* Table (desktop) */}
           <div className="expense-table-wrap">
             <table className="expense-table">
               <thead>
@@ -152,6 +152,25 @@ export default function ExpenseList({
             </table>
 
             {/* Summary bar */}
+            <div className="list-summary-bar">
+              <span>{filtered.length} expense{filtered.length !== 1 ? "s" : ""}</span>
+              <span>
+                Total:{" "}
+                <span className="list-summary-total">{fmt(totalFiltered)}</span>
+              </span>
+            </div>
+          </div>
+
+          {/* Cards (mobile) — CSS toggles visibility against the table above */}
+          <div className="expense-cards">
+            {filtered.map((expense) => (
+              <ExpenseItem
+                key={expense._id}
+                expense={expense}
+                onEdit={onEdit}
+                onDelete={onDelete}
+              />
+            ))}
             <div className="list-summary-bar">
               <span>{filtered.length} expense{filtered.length !== 1 ? "s" : ""}</span>
               <span>

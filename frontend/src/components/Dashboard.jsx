@@ -4,8 +4,7 @@
 import React, { useMemo } from "react";
 import MonthlyChart from "./MonthlyChart";
 import CategoryChart from "./CategoryChart";
-import ExpenseItem from "./ExpenseItem";
-import { CATEGORY_COLORS } from "../app";
+import { CATEGORY_COLORS } from "../App";
 
 // --- Helpers ---
 

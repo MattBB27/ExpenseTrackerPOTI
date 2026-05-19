@@ -172,12 +172,4 @@ router.delete("/:id", validateObjectId, async (req, res) => {
   }
 });
 
-// Export categories list so frontend can request it
-router.get("/categories", (req, res) => {
-  res.json(Expense.schema.statics.CATEGORIES || [
-    "Food & Dining", "Transport", "Housing & Rent", "Utilities",
-    "Entertainment", "Healthcare", "Shopping", "Education", "Travel", "Other",
-  ]);
-});
-
 module.exports = router;

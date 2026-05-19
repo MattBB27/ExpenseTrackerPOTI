@@ -2,7 +2,7 @@
 // Client-side validation with built-in error messages.
 
 import React, { useState, useEffect, useRef } from "react";
-import { CATEGORIES } from "../app";
+import { CATEGORIES } from "../App";
 
 // --- Helpers ---
 
