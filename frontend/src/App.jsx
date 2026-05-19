@@ -1,10 +1,16 @@
-// Manages global state (expenses, summary, active tab, modal/expense form, toast notis)
+// Top-level routing between AuthScreen / LoadingScreen / AuthenticatedApp
+// based on the AuthContext status. The previous monolithic App component
+// has been moved into AuthenticatedApp() below; the CATEGORIES /
+// CATEGORY_COLORS exports are preserved unchanged for the five components
+// that import them from ../App.
 
 import React, { useState, useEffect, useCallback } from "react";
 import Dashboard from "./components/Dashboard";
 import ExpenseList from "./components/ExpenseList";
 import ExpenseForm from "./components/ExpenseForm";
 import Toast from "./components/Toast";
+import AuthScreen from "./components/auth/AuthScreen";
+import { useAuth } from "./context/AuthContext";
 import { getExpenses, getSummary, createExpense, updateExpense, deleteExpense } from "./services/api";
 import "./App.css";
 
@@ -36,9 +42,14 @@ export const CATEGORY_COLORS = {
   "Other": "#8b8fa8",
 };
 
-// --- App ---
+// --- AuthenticatedApp ---
+// The main app shell, rendered only when the user is signed in. All the
+// state and handlers that used to live on the top-level App component
+// stayed here unchanged; only the surrounding routing moved out.
 
-export default function App() {
+function AuthenticatedApp() {
+  const { user, logout } = useAuth();
+
   // State
   const [expenses, setExpenses] = useState([]);
   const [summary, setSummary] = useState(null);
@@ -172,6 +183,22 @@ export default function App() {
             </button>
           </nav>
 
+          <div className="user-menu">
+            <span className="user-greeting">
+              Hi, <strong>{user.username}</strong>
+              {user.role === "admin" && (
+                <span className="admin-badge">admin</span>
+              )}
+            </span>
+            <button
+              className="btn-logout"
+              onClick={logout}
+              title="Sign out"
+            >
+              Logout
+            </button>
+          </div>
+
           <button className="btn-add" onClick={openAddModal}>
             + Add Expense
           </button>
@@ -233,4 +260,30 @@ export default function App() {
       </div>
     </div>
   );
+}
+
+// --- LoadingScreen ---
+// Shown for the brief window between mount and the AuthContext resolving
+// its initial hydrate. Visible only when there is a stored token whose
+// validity has to be confirmed with /api/auth/me; if there is no token
+// the context dispatches synchronously and this never renders.
+
+function LoadingScreen() {
+  return (
+    <div className="loading-screen">
+      <div className="spinner" />
+      <p>Loading…</p>
+    </div>
+  );
+}
+
+// --- App ---
+// Top-level routing. The three branches map 1:1 to the AuthContext status.
+
+export default function App() {
+  const { status } = useAuth();
+
+  if (status === "loading") return <LoadingScreen />;
+  if (status === "unauthenticated") return <AuthScreen />;
+  return <AuthenticatedApp />;
 }
