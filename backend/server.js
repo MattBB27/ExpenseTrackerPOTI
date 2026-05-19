@@ -18,6 +18,7 @@ app.use(
   cors({
     origin: ["http://localhost:5173", "http://127.0.0.1:5173"],
     methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
@@ -27,7 +28,9 @@ app.use(express.json());
 
 // --- API Routes ---
 
+const authRoutes = require("./routes/auth");
 const expenseRoutes = require("./routes/expenses");
+app.use("/api/auth", authRoutes);
 app.use("/api/expenses", expenseRoutes);
 
 // Health-check route
