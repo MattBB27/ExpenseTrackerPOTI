@@ -459,6 +459,33 @@
   outline: none;
 }
 
+/* Live search input — sits in the .filters row alongside the dropdowns.
+   Mirrors .filter-select styling but with a min-width so it reads as a
+   text field, and a flex hint so it claims any spare horizontal space. */
+.filter-search {
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family);
+  min-width: 220px;
+  flex: 1;
+  transition: border-color var(--transition-fast);
+}
+
+.filter-search::placeholder {
+  color: var(--color-text-muted);
+  opacity: 0.7;
+}
+
+.filter-search:hover,
+.filter-search:focus {
+  border-color: var(--color-primary);
+  outline: none;
+}
+
 .filter-clear {
   padding: var(--space-2) var(--space-3);
   background: transparent;

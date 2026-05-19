@@ -99,6 +99,22 @@ export function AuthProvider({ children }) {
     return () => window.removeEventListener("auth:expired", handler);
   }, []);
 
+  // Cross-tab logout: when another tab removes the token (or logs in as a
+  // different user), the `storage` event fires in this tab. The browser
+  // does NOT fire `storage` for changes in the same document, so this does
+  // not help with same-tab DevTools deletions — those are caught on the
+  // next API request via the 401 interceptor. The handler runs only when
+  // the relevant key changed.
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key === TOKEN_KEY && !e.newValue) {
+        dispatch({ type: "LOGOUT" });
+      }
+    };
+    window.addEventListener("storage", handler);
+    return () => window.removeEventListener("storage", handler);
+  }, []);
+
   // --- Auth actions ---
 
   // login / register both throw on failure so the calling form can read

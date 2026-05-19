@@ -36,9 +36,13 @@ export default function ExpenseList({
   // Filter state —isolated from the Dashboard
   const [filterCategory, setFilterCategory] = useState("");
   const [filterMonth, setFilterMonth] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
-  // Client-side filtering 
+  // Client-side filtering
   const filtered = useMemo(() => {
+    // Normalise once per render, not once per expense.
+    const q = searchQuery.trim().toLowerCase();
+
     return expenses.filter((e) => {
       if (filterCategory && e.category !== filterCategory) return false;
       if (filterMonth) {
@@ -46,20 +50,29 @@ export default function ExpenseList({
         const monthStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
         if (monthStr !== filterMonth) return false;
       }
+      if (q) {
+        // Description is optional on the schema; default to empty string so
+        // expenses without one still pass through the title check.
+        const haystack = `${e.title} ${e.description || ""}`.toLowerCase();
+        if (!haystack.includes(q)) return false;
+      }
       return true;
     });
-  }, [expenses, filterCategory, filterMonth]);
+  }, [expenses, filterCategory, filterMonth, searchQuery]);
 
   const totalFiltered = useMemo(
     () => filtered.reduce((acc, e) => acc + e.amount, 0),
     [filtered]
   );
 
-  const hasFilters = filterCategory || filterMonth;
+  // Trim for the "is any filter active?" check so a box full of spaces
+  // doesn't pretend to be filtering anything.
+  const hasFilters = filterCategory || filterMonth || searchQuery.trim();
 
   const clearFilters = () => {
     setFilterCategory("");
     setFilterMonth("");
+    setSearchQuery("");
   };
 
   return (
@@ -76,6 +89,17 @@ export default function ExpenseList({
 
         {/* Filters */}
         <div className="filters">
+          {/* Live search — case-insensitive substring match on title +
+              description; combines with the dropdown filters below. */}
+          <input
+            className="filter-search"
+            type="search"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search title or description…"
+            aria-label="Search expenses"
+          />
+
           {/* Category filter */}
           <select
             className="filter-select"
