@@ -10,6 +10,7 @@ import ExpenseList from "./components/ExpenseList";
 import ExpenseForm from "./components/ExpenseForm";
 import Toast from "./components/Toast";
 import AuthScreen from "./components/auth/AuthScreen";
+import AdminPanel from "./components/admin/AdminPanel";
 import { useAuth } from "./context/AuthContext";
 import { getExpenses, getSummary, createExpense, updateExpense, deleteExpense } from "./services/api";
 import "./App.css";
@@ -55,7 +56,7 @@ function AuthenticatedApp() {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [apiError, setApiError] = useState(null);
-  const [activeTab, setActiveTab] = useState("dashboard"); // 'dashboard' | 'expenses'
+  const [activeTab, setActiveTab] = useState("dashboard"); // 'dashboard' | 'expenses' | 'admin'
   const [modalOpen, setModalOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState(null); // null = add mode
   const [toasts, setToasts] = useState([]);
@@ -181,6 +182,14 @@ function AuthenticatedApp() {
                 <span className="tab-badge">{expenses.length}</span>
               )}
             </button>
+            {user.role === "admin" && (
+              <button
+                className={`tab-btn ${activeTab === "admin" ? "active" : ""}`}
+                onClick={() => setActiveTab("admin")}
+              >
+                🛡️ Admin
+              </button>
+            )}
           </nav>
 
           <div className="user-menu">
@@ -199,9 +208,14 @@ function AuthenticatedApp() {
             </button>
           </div>
 
-          <button className="btn-add" onClick={openAddModal}>
-            + Add Expense
-          </button>
+          {/* Hide the global "+ Add Expense" on the admin tab — UsersTable
+              has its own "+ Add User" primary action so the header should
+              stay context-free there. */}
+          {activeTab !== "admin" && (
+            <button className="btn-add" onClick={openAddModal}>
+              + Add Expense
+            </button>
+          )}
         </div>
       </header>
 
@@ -238,6 +252,9 @@ function AuthenticatedApp() {
                 onDelete={handleDelete}
                 onAddClick={openAddModal}
               />
+            )}
+            {activeTab === "admin" && user.role === "admin" && (
+              <AdminPanel addToast={addToast} />
             )}
           </>
         )}

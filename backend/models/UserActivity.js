@@ -23,6 +23,12 @@ const ACTIONS = Object.freeze({
   CREATE_EXPENSE: "CREATE_EXPENSE",
   UPDATE_EXPENSE: "UPDATE_EXPENSE",
   DELETE_EXPENSE: "DELETE_EXPENSE",
+  // Admin user-management actions. Attributed to the admin who performed
+  // them; metadata snapshots the target user's id/username/role so the log
+  // remains meaningful after the target is deleted or renamed.
+  CREATE_USER: "CREATE_USER",
+  UPDATE_USER: "UPDATE_USER",
+  DELETE_USER: "DELETE_USER",
 });
 
 const userActivitySchema = new mongoose.Schema(

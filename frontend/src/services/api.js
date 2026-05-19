@@ -66,6 +66,20 @@ export const logoutRequest = () =>
 
 export const getMe = () => api.get("/auth/me").then((r) => r.data);
 
+// --- Admin: user management ---
+// All routes are guarded by requireAuth + requireAdmin server-side.
+
+export const getUsers = () => api.get("/users").then((r) => r.data);
+
+export const createUser = (data) =>
+  api.post("/users", data).then((r) => r.data);
+
+export const updateUser = (id, data) =>
+  api.put(`/users/${id}`, data).then((r) => r.data);
+
+export const deleteUser = (id) =>
+  api.delete(`/users/${id}`).then((r) => r.data);
+
 // --- Expense CRUD ---
 
 // Fetch all expenses, optionally filtered

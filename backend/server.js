@@ -30,8 +30,10 @@ app.use(express.json());
 
 const authRoutes = require("./routes/auth");
 const expenseRoutes = require("./routes/expenses");
+const userRoutes = require("./routes/users");
 app.use("/api/auth", authRoutes);
 app.use("/api/expenses", expenseRoutes);
+app.use("/api/users", userRoutes);
 
 // Health-check route
 app.get("/api/health", (req, res) => {
