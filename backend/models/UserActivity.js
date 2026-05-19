@@ -70,6 +70,11 @@ const userActivitySchema = new mongoose.Schema(
 // (Phase 7's per-user filter) and "any activity for user X" lookups, since
 // MongoDB can use a compound index's leading field on its own.
 userActivitySchema.index({ user: 1, createdAt: -1 });
+// Standalone createdAt index for the unfiltered "all users, newest first"
+// query path. A compound index's non-leading fields cannot serve a query
+// that does not include the leading field, so this second index is needed
+// to keep the unfiltered case off a collection scan + in-memory sort.
+userActivitySchema.index({ createdAt: -1 });
 
 userActivitySchema.statics.ACTIONS = ACTIONS;
 

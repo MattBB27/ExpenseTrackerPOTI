@@ -80,6 +80,13 @@ export const updateUser = (id, data) =>
 export const deleteUser = (id) =>
   api.delete(`/users/${id}`).then((r) => r.data);
 
+// --- Admin: activity log ---
+
+// Params: { page?, limit?, userId? }. Server returns
+// { activities, total, page, limit, totalPages }.
+export const getActivities = (params = {}) =>
+  api.get("/activities", { params }).then((r) => r.data);
+
 // --- Expense CRUD ---
 
 // Fetch all expenses, optionally filtered
