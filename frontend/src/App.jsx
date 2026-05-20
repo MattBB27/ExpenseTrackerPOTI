@@ -1,8 +1,4 @@
-// Top-level routing between AuthScreen / LoadingScreen / AuthenticatedApp
-// based on the AuthContext status. The previous monolithic App component
-// has been moved into AuthenticatedApp() below; the CATEGORIES /
-// CATEGORY_COLORS exports are preserved unchanged for the five components
-// that import them from ../App.
+// Top-level routing between AuthScreen / LoadingScreen / AuthenticatedApp based on AuthContext. 
 
 import React, { useState, useEffect, useCallback } from "react";
 import Dashboard from "./components/Dashboard";
@@ -44,9 +40,7 @@ export const CATEGORY_COLORS = {
 };
 
 // --- AuthenticatedApp ---
-// The main app shell, rendered only when the user is signed in. All the
-// state and handlers that used to live on the top-level App component
-// stayed here unchanged; only the surrounding routing moved out.
+// The main app shell, rendered only when the user is signed in.
 
 function AuthenticatedApp() {
   const { user, logout } = useAuth();
@@ -209,8 +203,7 @@ function AuthenticatedApp() {
           </div>
 
           {/* Hide the global "+ Add Expense" on the admin tab — UsersTable
-              has its own "+ Add User" primary action so the header should
-              stay context-free there. */}
+              has its own "+ Add User" primary action. */}
           {activeTab !== "admin" && (
             <button className="btn-add" onClick={openAddModal}>
               + Add Expense
@@ -282,8 +275,7 @@ function AuthenticatedApp() {
 // --- LoadingScreen ---
 // Shown for the brief window between mount and the AuthContext resolving
 // its initial hydrate. Visible only when there is a stored token whose
-// validity has to be confirmed with /api/auth/me; if there is no token
-// the context dispatches synchronously and this never renders.
+// validity has to be confirmed with /api/auth/me; if there is no token this never renders.
 
 function LoadingScreen() {
   return (

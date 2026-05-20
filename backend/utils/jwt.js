@@ -7,8 +7,7 @@
 
 const jwt = require("jsonwebtoken");
 
-// 24 hours is a reasonable balance: short enough that a stolen token is not
-// usable indefinitely, long enough that users are not constantly logged out.
+// 24 hours is a reasonable balance
 const TOKEN_EXPIRY = "24h";
 
 // Read the secret lazily so the server can still boot without JWT_SECRET set

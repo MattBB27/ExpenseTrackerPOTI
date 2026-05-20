@@ -1,11 +1,10 @@
 // Seed script — wipes users + expenses and inserts demo data.
 //
 // Creates two accounts:
-//   admin / admin123  (role: admin)
+//   admin123 / admin123  (role: admin)
 //   demo  / demo123   (role: user)
 //
 // Then seeds 25 realistic expenses split between them.
-//
 // Usage: npm run seed   (run from backend/, requires .env to be set up)
 
 const mongoose = require("mongoose");
@@ -19,16 +18,16 @@ dotenv.config();
 const MONGO_URI = process.env.MONGO_URI;
 
 const SAMPLE_TITLES = {
-  "Food & Dining":  ["Grocery run", "Coffee with friends", "Dinner takeout", "Weekly groceries", "Brunch"],
-  "Transport":      ["Uber ride", "Petrol fill-up", "Train pass", "Bus fare", "Airport taxi"],
+  "Food & Dining": ["Grocery run", "Coffee with friends", "Dinner takeout", "Weekly groceries", "Brunch"],
+  "Transport": ["Uber ride", "Petrol fill-up", "Train pass", "Bus fare", "Airport taxi"],
   "Housing & Rent": ["Monthly rent", "Renters insurance", "Apartment cleaning"],
-  "Utilities":      ["Electricity bill", "Internet bill", "Water bill", "Gas bill"],
-  "Entertainment":  ["Movie tickets", "Concert tickets", "Streaming subscription", "Board game night"],
-  "Healthcare":     ["GP visit", "Pharmacy", "Dental checkup"],
-  "Shopping":       ["New shoes", "Birthday gift", "Winter jacket", "Headphones"],
-  "Education":      ["Textbook", "Online course", "Stationery"],
-  "Travel":         ["Flight to Melbourne", "Hotel booking", "Travel insurance"],
-  "Other":          ["Charity donation", "Bank fee", "Miscellaneous"],
+  "Utilities": ["Electricity bill", "Internet bill", "Water bill", "Gas bill"],
+  "Entertainment": ["Movie tickets", "Concert tickets", "Streaming subscription", "Board game night"],
+  "Healthcare": ["GP visit", "Pharmacy", "Dental checkup"],
+  "Shopping": ["New shoes", "Birthday gift", "Winter jacket", "Headphones"],
+  "Education": ["Textbook", "Online course", "Stationery"],
+  "Travel": ["Flight to Melbourne", "Hotel booking", "Travel insurance"],
+  "Other": ["Charity donation", "Bank fee", "Miscellaneous"],
 };
 
 const CATEGORIES = Object.keys(SAMPLE_TITLES);
@@ -61,7 +60,7 @@ async function seed() {
     console.log("Cleared existing users, expenses, and activity records");
 
     // Create the two seed users
-    const admin = new User({ username: "admin", role: "admin" });
+    const admin = new User({ username: "admin123", role: "admin" });
     await admin.setPassword("admin123");
     await admin.save();
 

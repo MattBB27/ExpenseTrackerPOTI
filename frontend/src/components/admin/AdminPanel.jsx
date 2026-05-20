@@ -1,4 +1,4 @@
-// AdminPanel — container for the admin tab content, with sub-navigation
+// AdminPanel: container for the admin tab content, with sub-navigation
 // between Users management and the Activity Log viewer.
 //
 // Each sub-view is rendered conditionally (not display:none) so it owns

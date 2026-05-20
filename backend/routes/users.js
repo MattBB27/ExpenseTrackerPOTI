@@ -25,8 +25,7 @@ const { ACTIONS } = require("../models/UserActivity");
 
 // Validation rules mirror /api/auth/register. Kept inline rather than
 // extracted to a shared module — a 4-line duplication is easier to read
-// than threading through a validator helper, and Phase 8 README can flag
-// it as a future cleanup if it matters.
+// than threading through a validator helper, it as a future cleanup if it matters.
 const USERNAME_REGEX = /^[a-z0-9_]+$/;
 const USERNAME_MIN = 3;
 const USERNAME_MAX = 30;

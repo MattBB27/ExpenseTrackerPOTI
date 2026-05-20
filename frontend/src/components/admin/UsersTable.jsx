@@ -1,4 +1,4 @@
-// Admin users table. Owns its own data fetching, modal state, and toasts.
+// Admin users table. Owns its own data fetching, modal state, and toast notis.
 //
 // Self-deletion is blocked both client-side (delete button hidden on the
 // current admin's own row) and server-side (returns 400). Self-edit IS
@@ -162,9 +162,8 @@ export default function UsersTable({ addToast }) {
                   </td>
                   <td>
                     <span
-                      className={`role-badge ${
-                        u.role === "admin" ? "role-admin" : "role-user"
-                      }`}
+                      className={`role-badge ${u.role === "admin" ? "role-admin" : "role-user"
+                        }`}
                     >
                       {u.role}
                     </span>
@@ -211,9 +210,8 @@ export default function UsersTable({ addToast }) {
                   {isSelf && <span className="user-self-tag">you</span>}
                 </div>
                 <span
-                  className={`role-badge ${
-                    u.role === "admin" ? "role-admin" : "role-user"
-                  }`}
+                  className={`role-badge ${u.role === "admin" ? "role-admin" : "role-user"
+                    }`}
                 >
                   {u.role}
                 </span>

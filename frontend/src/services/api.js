@@ -1,17 +1,10 @@
 // Axios service for all backend calls.
 // All components import from here.
-//
-// Phase 3 additions:
-//   - Auth endpoint helpers (loginRequest, registerRequest, logoutRequest, getMe)
-//   - Request interceptor attaches Bearer token from localStorage
-//   - Response interceptor dispatches `auth:expired` on 401, but only when a
-//     token was actually set — so wrong-password login attempts don't trigger
-//     a spurious global logout race.
 
 import axios from "axios";
 
-// localStorage key for the JWT. Exported so AuthContext (and only AuthContext)
-// can read/write it without duplicating the string literal.
+// localStorage key for the JWT. Exported so (ONLY) 
+// AuthContext can read/write it without duplicating.
 export const TOKEN_KEY = "expense_tracker_token";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
@@ -25,8 +18,7 @@ const api = axios.create({
 // --- Interceptors ---
 
 // Request: attach the current token (if any) on every outgoing request.
-// Reading from localStorage each time means a logout in one tab is picked up
-// on the next request without us having to wire up storage events.
+// Reading from localStorage each time means a logout in one tab is picked up on the next request 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem(TOKEN_KEY);
   if (token) {
@@ -36,10 +28,8 @@ api.interceptors.request.use((config) => {
 });
 
 // Response: on 401, fire a window event so the AuthContext can transition the
-// app to the unauthenticated state. The token guard is important — without it,
-// a wrong-password login attempt would also dispatch `auth:expired`, racing
-// with the login form's own error handling. We only treat a 401 as a session
-// expiry if there was actually a session to expire.
+// app to the unauthenticated state. The token guard means that a wrong-password login attempt 
+// would also dispatch `auth:expired`, racing with the login form's own error handling. 
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -59,15 +49,14 @@ export const loginRequest = (username, password) =>
 export const registerRequest = (username, password) =>
   api.post("/auth/register", { username, password }).then((r) => r.data);
 
-// We still hit the endpoint on logout so Phase 5 can log a LOGOUT activity
-// entry server-side; the AuthContext does not block on it.
+// AuthContext does not block LOGOUT
 export const logoutRequest = () =>
   api.post("/auth/logout").then((r) => r.data);
 
 export const getMe = () => api.get("/auth/me").then((r) => r.data);
 
 // --- Admin: user management ---
-// All routes are guarded by requireAuth + requireAdmin server-side.
+// All routes are guarded by requireAuth + requireAdmin.
 
 export const getUsers = () => api.get("/users").then((r) => r.data);
 

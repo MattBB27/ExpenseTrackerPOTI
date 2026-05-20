@@ -2,8 +2,8 @@
 //
 // Owns its own fetch state for both activities and the user list (for the
 // filter dropdown). Filter and pagination state is local; switching away
-// from this tab unmounts and resets everything, matching the rest of the
-// app's tab pattern. Failed-login attempts are not logged anywhere in the
+// from this tab unmounts and resets everything
+// Failed-login attempts are not logged anywhere in the
 // system so they do not appear as a row type here.
 
 import React, { useState, useEffect } from "react";
@@ -11,9 +11,8 @@ import { getActivities, getUsers } from "../../services/api";
 
 const PAGE_SIZE = 25;
 
-// Hand-rolled relative-time formatter. Intl.RelativeTimeFormat is correct but
-// reads more stiltedly out of the box; this matches the casual tone of the
-// rest of the UI. The precise time goes in the title attribute on hover.
+// relative-time formatter. This matches the casual tone of the rest of the UI. 
+// The precise time goes in the title attribute on hover.
 function relativeTime(iso) {
   const then = new Date(iso);
   const seconds = Math.round((Date.now() - then.getTime()) / 1000);
@@ -32,8 +31,8 @@ function relativeTime(iso) {
 // activity.metadata. The fallbacks make the viewer robust to any historical
 // entries that pre-date a metadata convention.
 const ACTION_DISPLAY = {
-  LOGIN:    { icon: "🔐", label: "logged in" },
-  LOGOUT:   { icon: "🚪", label: "logged out" },
+  LOGIN: { icon: "🔐", label: "logged in" },
+  LOGOUT: { icon: "🚪", label: "logged out" },
   REGISTER: { icon: "✨", label: "registered an account" },
   CREATE_EXPENSE: {
     icon: "➕",
@@ -100,8 +99,7 @@ export default function ActivityLog({ addToast }) {
 
   // Fetch the user list once for the filter dropdown. If an admin creates a
   // new user on the Users sub-tab and switches here without remounting,
-  // they will not see the new option until the next mount — acceptable
-  // for a uni-project scope and the trade-off was discussed in Phase 6.
+  // they will not see the new option until the next mount.
   useEffect(() => {
     getUsers()
       .then(setUsers)
@@ -209,8 +207,6 @@ export default function ActivityLog({ addToast }) {
           <ul className="activity-list">
             {activities.map((a) => {
               const { icon, text } = describe(a);
-              // a.user may be null if the referenced user has been deleted,
-              // though Phase 6's cascade delete makes that path unlikely.
               const username = a.user?.username || "(deleted user)";
               const fullTime = new Date(a.createdAt).toLocaleString("en-AU");
               return (

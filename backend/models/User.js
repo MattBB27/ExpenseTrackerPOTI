@@ -7,7 +7,7 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 
-// bcrypt cost factor. 10 is a sensible default for 2026 hardware: roughly
+// bcrypt cost factor. 10 is a sensible default: roughly
 // 100 ms per hash, which is fast enough for login UX and slow enough to make
 // offline brute-forcing expensive.
 const BCRYPT_COST = 10;

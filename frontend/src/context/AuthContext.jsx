@@ -2,18 +2,16 @@
 //
 // Status is a single discriminated field: "loading" | "authenticated" |
 // "unauthenticated". Form-level concerns (submit-in-flight, field errors)
-// stay local to LoginForm / RegisterForm — they don't belong in global state.
+// stay local to LoginForm / RegisterForm  (not in global state).
 //
-// On mount we synchronously check localStorage for a token. No token → we
-// transition straight to "unauthenticated" with no network round-trip and no
-// flash of a loading spinner. Token present → call /api/auth/me to confirm
+// On mount we synchronously check localStorage for a token. No token -> we
+// transition straight to "unauthenticated". Token present -> call /api/auth/me to confirm
 // it is still valid; the backend re-fetches the user from the DB on every
 // requireAuth request, so a demoted or deleted user loses access immediately.
 //
-// The axios response interceptor fires a window-level `auth:expired` event
-// when an authenticated request comes back 401. We listen for it here and
-// dispatch LOGOUT, which routes the user back to the AuthScreen the next
-// time React renders.
+// The axios response interceptor fires `auth:expired` event
+// when an authenticated request comes back 401. Listens here and completes LOGOUT,
+// which routes the user back to the AuthScreen only when React next renders.
 
 import React, {
   createContext,
@@ -50,8 +48,6 @@ function authReducer(state, action) {
 
     case "HYDRATE_FAILURE":
     case "LOGOUT":
-      // Idempotent: safe to dispatch from multiple paths (hydrate catch +
-      // auth:expired listener) without compounding state changes.
       return { status: "unauthenticated", user: null, token: null };
 
     default:
@@ -67,8 +63,7 @@ export function AuthProvider({ children }) {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
   // Hydrate from localStorage on mount. The `getMe()` call uses the axios
-  // request interceptor to attach the bearer token, so we don't need to
-  // pass it explicitly.
+  // request interceptor to attach the bearer token, so we don't need to pass it explicitly.
   useEffect(() => {
     const token = localStorage.getItem(TOKEN_KEY);
     if (!token) {
@@ -82,9 +77,8 @@ export function AuthProvider({ children }) {
       })
       .catch(() => {
         // The interceptor will already have cleared the token and fired
-        // `auth:expired` on a 401. We dispatch here too so non-401 errors
-        // (network down on first load with a stale token) also resolve
-        // to a usable unauthenticated state instead of an indefinite spinner.
+        // `auth:expired` on a 401. Non-401 errors also resolve to a 
+        // usable unauthenticated state instead of an indefinite spinner.
         localStorage.removeItem(TOKEN_KEY);
         dispatch({ type: "HYDRATE_FAILURE" });
       });
@@ -92,19 +86,13 @@ export function AuthProvider({ children }) {
 
   // Listen for session expiry coming from the axios response interceptor.
   // The event is fired only when there was a token in storage at the time
-  // of the 401, so login failures don't trigger it.
+  // of a 401, so login failures don't trigger it.
   useEffect(() => {
     const handler = () => dispatch({ type: "LOGOUT" });
     window.addEventListener("auth:expired", handler);
     return () => window.removeEventListener("auth:expired", handler);
   }, []);
 
-  // Cross-tab logout: when another tab removes the token (or logs in as a
-  // different user), the `storage` event fires in this tab. The browser
-  // does NOT fire `storage` for changes in the same document, so this does
-  // not help with same-tab DevTools deletions — those are caught on the
-  // next API request via the 401 interceptor. The handler runs only when
-  // the relevant key changed.
   useEffect(() => {
     const handler = (e) => {
       if (e.key === TOKEN_KEY && !e.newValue) {
@@ -134,12 +122,11 @@ export function AuthProvider({ children }) {
 
   const logout = useCallback(async () => {
     // Fire the server-side logout but do not block on it: if the backend is
-    // unreachable or the token is already invalid, the user should still be
-    // able to log out locally.
+    // unreachable or the token is already invalid, the user should still be able to logout
     try {
       await logoutRequest();
     } catch {
-      /* ignore — local logout proceeds regardless */
+      /* ignore (local logout proceeds regardless) */
     }
     localStorage.removeItem(TOKEN_KEY);
     dispatch({ type: "LOGOUT" });

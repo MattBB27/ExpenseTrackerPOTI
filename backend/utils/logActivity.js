@@ -1,4 +1,4 @@
-// logActivity — fire-and-forget audit-log writer.
+// logActivity: audit-log writer.
 //
 // Activity logging is observational and must never interfere with the
 // real request path. This helper:
@@ -16,8 +16,6 @@ const UserActivity = require("../models/UserActivity");
 
 function logActivity({ userId, action, metadata }) {
   UserActivity.create({ user: userId, action, metadata }).catch((err) => {
-    // Intentionally non-fatal. Surfaced to the server log so failures are
-    // visible during development without changing the response shape.
     console.error(`logActivity(${action}) failed:`, err.message);
   });
 }

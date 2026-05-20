@@ -1,4 +1,4 @@
-// routes/activities.js — admin-only activity log viewer.
+// routes/activities.js: admin-only activity log viewer.
 //
 // GET /api/activities
 //   ?page=<int>         1-indexed, default 1
@@ -6,7 +6,7 @@
 //   ?userId=<ObjectId>  optional filter; rejected with 400 if malformed
 //
 // Returns { activities, total, page, limit, totalPages }. The user ref is
-// populated with username and role only — passwordHash never leaves the DB
+// populated with username and role only; passwordHash never leaves the DB
 // even by accident on this path. Entries are immutable so caching headers
 // could be added later, but for a fresh-on-every-load admin view they would
 // be more annoying than useful.
@@ -57,7 +57,7 @@ router.get("/", async (req, res) => {
 
     const skip = (page - 1) * limit;
 
-    // Run the find and the count in parallel — they hit independent indexes
+    // Run the find and the count in parallel - they hit independent indexes
     // and there is no reason to serialise them.
     const [activities, total] = await Promise.all([
       UserActivity.find(filter)

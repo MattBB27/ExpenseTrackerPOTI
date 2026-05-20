@@ -1,8 +1,8 @@
 // Admin user-form modal. Same modal/.form-* styling as ExpenseForm so the
-// admin UI feels native to the rest of the app.
+// admin UI matches the rest of the app.
 //
-// initialData = null → create mode (password required).
-// initialData = {...user} → edit mode (password optional; blank means
+// initialData = null -> create mode (password required).
+// initialData = {...user} -> edit mode (password optional; blank means
 // keep current). Username casing is normalised to lowercase on submit to
 // match the backend's storage rules.
 
@@ -169,8 +169,8 @@ export default function UserForm({ initialData, onSave, onClose }) {
               {submitting
                 ? "Saving…"
                 : isEdit
-                ? "Save Changes"
-                : "Create User"}
+                  ? "Save Changes"
+                  : "Create User"}
             </button>
           </div>
         </form>

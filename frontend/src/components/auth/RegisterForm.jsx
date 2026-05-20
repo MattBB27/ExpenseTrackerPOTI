@@ -11,7 +11,7 @@ const USERNAME_MIN = 3;
 const USERNAME_MAX = 30;
 const PASSWORD_MIN = 6;
 
-// Returns a map of field → error string. An empty object means valid.
+// Returns a map of field -> error string. An empty object means valid.
 function validate({ username, password, confirm }) {
   const errors = {};
 
@@ -45,8 +45,7 @@ export default function RegisterForm() {
   const [confirm, setConfirm] = useState("");
   const [submitting, setSubmitting] = useState(false);
   // `fieldErrors` is for client-side per-field validation; `formError` is
-  // for server-side errors that aren't tied to a specific field (e.g.
-  // network failure).
+  // for server-side errors that aren't tied to a specific field (e.g. network failure).
   const [fieldErrors, setFieldErrors] = useState({});
   const [formError, setFormError] = useState(null);
 
@@ -72,9 +71,9 @@ export default function RegisterForm() {
       } else {
         setFormError(
           msg ||
-            (err.code === "ECONNABORTED"
-              ? "Request timed out — is the server running?"
-              : "Could not reach the server")
+          (err.code === "ECONNABORTED"
+            ? "Request timed out — is the server running?"
+            : "Could not reach the server")
         );
       }
       setSubmitting(false);

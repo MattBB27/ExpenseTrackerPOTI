@@ -1,14 +1,13 @@
 // Mongoose model for an audit-log entry capturing one user action.
 //
 // Entries are immutable: written once by logActivity() at the point a user
-// performs a logged action, and never updated. Phase 7 will surface these
-// in an admin-only viewer paginated per user, newest-first — the compound
+// performs a logged action, and never updated. 
 // index { user: 1, createdAt: -1 } is defined here so that query is cheap.
 //
 // `metadata` is intentionally schemaless (Mixed) so each action type can
 // store whatever context is most useful without a schema migration. For
 // expense actions we snapshot the title/amount/category at the time of the
-// action — that means the activity log remains readable even after the
+// action; the activity log remains readable even after the
 // underlying expense is deleted or renamed.
 
 const mongoose = require("mongoose");
@@ -67,7 +66,7 @@ const userActivitySchema = new mongoose.Schema(
 );
 
 // Compound index supports both "all activity for user X, newest first"
-// (Phase 7's per-user filter) and "any activity for user X" lookups, since
+// (per-user filter and "any activity for user X" lookups, since
 // MongoDB can use a compound index's leading field on its own.
 userActivitySchema.index({ user: 1, createdAt: -1 });
 // Standalone createdAt index for the unfiltered "all users, newest first"
