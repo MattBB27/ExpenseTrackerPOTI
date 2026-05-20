@@ -92,7 +92,7 @@ async function seed() {
     console.log(`Seeded ${expenses.length} expenses`);
 
     console.log("\nSeed accounts:");
-    console.log("  username: admin   password: admin123   role: admin");
+    console.log("  username: admin123   password: admin123   role: admin");
     console.log("  username: demo    password: demo123    role: user");
 
     process.exit(0);
