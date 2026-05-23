@@ -1,4 +1,5 @@
-/* App.css — All component and layout styles */
+/* App.css: All component and layout styles 
+  GENERATED since we aren't using a framework like TailwindCSS */
 
 /* Layout */
 
@@ -1189,6 +1190,144 @@
   gap: var(--space-5);
 }
 
+/* User search typeahead — sits in the .filters row, replaces the old user
+   dropdown. The wrapping div is position:relative so the suggestions list
+   can be absolutely positioned below the input without shifting other
+   filter controls. */
+.user-search-wrap {
+  position: relative;
+}
+
+.user-search-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* Inherits .filter-search sizing; extra right padding reserves room for the
+   clear button and spinner so text doesn't slide under them. */
+.user-search-input {
+  padding-right: var(--space-8, 2rem);
+  min-width: 160px;
+}
+
+.user-search-clear {
+  position: absolute;
+  right: var(--space-2);
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 var(--space-1);
+}
+
+.user-search-clear:hover {
+  color: var(--color-text);
+}
+
+/* Tiny inline spinner shown while the debounced search is in flight. */
+.user-search-spinner {
+  position: absolute;
+  right: var(--space-2);
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--color-border);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+.user-search-suggestions,
+.user-search-empty {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  min-width: 100%;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  z-index: 50;
+  list-style: none;
+  padding: var(--space-1) 0;
+  margin: 0;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.user-search-empty {
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
+.user-search-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.user-search-option:hover,
+.user-search-option[aria-selected="true"] {
+  background: var(--color-surface-2);
+}
+
+.user-search-option-name {
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.user-search-option-role {
+  font-size: var(--font-size-xs, 0.75rem);
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Summary line shown above the results when one or more filters are
+   non-default. Sits between the header (with its filter dropdowns) and
+   the list itself, so admins can see at a glance what they're filtering
+   by without scanning three <select>s. */
+.active-filters {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-surface-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  flex-wrap: wrap;
+}
+
+.active-filters-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.active-filters-clear {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--color-primary);
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family);
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.active-filters-clear:hover {
+  color: var(--color-primary-hover, var(--color-primary));
+}
+
 .activity-list {
   list-style: none;
   background: var(--color-surface);
@@ -1323,6 +1462,7 @@
 }
 
 @media (max-width: 480px) {
+
   /* On the narrowest screens the username + Hi prefix + logout + add button
      no longer fit; drop the prefix and badge text, keep the strong name. */
   .user-greeting {

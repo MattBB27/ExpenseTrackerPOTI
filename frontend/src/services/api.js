@@ -18,7 +18,7 @@ const api = axios.create({
 // --- Interceptors ---
 
 // Request: attach the current token (if any) on every outgoing request.
-// Reading from localStorage each time means a logout in one tab is picked up on the next request 
+// Reading from localStorage each time means a logout in one tab is picked up on next request 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem(TOKEN_KEY);
   if (token) {
@@ -28,8 +28,8 @@ api.interceptors.request.use((config) => {
 });
 
 // Response: on 401, fire a window event so the AuthContext can transition the
-// app to the unauthenticated state. The token guard means that a wrong-password login attempt 
-// would also dispatch `auth:expired`, racing with the login form's own error handling. 
+// app to  unauthenticated state. The token guard means that a wrong password login attempt 
+// would also dispatch `auth:expired`, racing with login form's error handling. 
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -58,7 +58,8 @@ export const getMe = () => api.get("/auth/me").then((r) => r.data);
 // --- Admin: user management ---
 // All routes are guarded by requireAuth + requireAdmin.
 
-export const getUsers = () => api.get("/users").then((r) => r.data);
+export const getUsers = (params = {}) =>
+  api.get("/users", { params }).then((r) => r.data);
 
 export const createUser = (data) =>
   api.post("/users", data).then((r) => r.data);

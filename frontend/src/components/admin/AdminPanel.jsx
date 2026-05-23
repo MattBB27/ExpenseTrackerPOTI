@@ -1,15 +1,9 @@
 // AdminPanel: container for the admin tab content, with sub-navigation
 // between Users management and the Activity Log viewer.
 //
-// AdminPanel also owns the activity-log user filter (`selectedUserId`).
-// It lives here rather than inside ActivityLog so that UsersTable can
-// pre-seed the filter when an admin clicks a user row, then flip the
-// sub-tab over to Activity in one go. ActivityLog still owns its own
-// pagination state — that's a view-level concern with no cross-sibling
-// implications.
-//
-// Each sub-view is rendered conditionally (not display:none) so it owns
-// its own lifecycle for everything else (modal state, data fetches).
+// AdminPanel owns the activity-log user filter as a full { _id, username }
+// object (selectedUser) so ActivityLog can display names without a separate lookup.
+// It can pre-seed it when an admin clicks a user row and change the sub-tab in one update
 
 import React, { useState, useCallback } from "react";
 import UsersTable from "./UsersTable";
@@ -17,13 +11,13 @@ import ActivityLog from "./ActivityLog";
 
 export default function AdminPanel({ addToast }) {
   const [subTab, setSubTab] = useState("users");
-  const [selectedUserId, setSelectedUserId] = useState("");
+  // Full { _id, username } object so ActivityLog can display the name without a separate lookup
+  const [selectedUser, setSelectedUser] = useState(null);
 
-  // Called from UsersTable when an admin clicks a user row. Sets the
-  // activity-log filter and switches the sub-tab in a single update so
-  // ActivityLog mounts with the filter already applied.
-  const navigateToActivity = useCallback((userId) => {
-    setSelectedUserId(userId);
+  // Called from UsersTable when an admin clicks a user row. Receives the
+  // full user object so the name is immediately available in ActivityLog.
+  const navigateToActivity = useCallback((user) => {
+    setSelectedUser(user);
     setSubTab("activity");
   }, []);
 
@@ -36,7 +30,7 @@ export default function AdminPanel({ addToast }) {
           className={`admin-subnav-btn ${subTab === "users" ? "active" : ""}`}
           onClick={() => setSubTab("users")}
         >
-          👥 Users
+          {"👥 Users"}
         </button>
         <button
           role="tab"
@@ -44,7 +38,7 @@ export default function AdminPanel({ addToast }) {
           className={`admin-subnav-btn ${subTab === "activity" ? "active" : ""}`}
           onClick={() => setSubTab("activity")}
         >
-          📜 Activity Log
+          {"📜 Activity Log"}
         </button>
       </nav>
 
@@ -57,8 +51,9 @@ export default function AdminPanel({ addToast }) {
       {subTab === "activity" && (
         <ActivityLog
           addToast={addToast}
-          selectedUserId={selectedUserId}
-          onSelectedUserIdChange={setSelectedUserId}
+          selectedUserId={selectedUser?._id || ""}
+          selectedUsername={selectedUser?.username || ""}
+          onSelectedUserChange={setSelectedUser}
         />
       )}
     </div>

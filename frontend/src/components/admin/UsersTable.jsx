@@ -1,16 +1,11 @@
-// Admin users table. Owns its own data fetching, modal state, and toast notis.
+// Admin users table
 //
-// Self-deletion is blocked both client-side (delete button hidden on the
-// current admin's own row) and server-side (returns 400). Self-edit IS
-// allowed; if the admin renames themselves, the header greeting stays
-// stale until reload because it's sourced from AuthContext rather than
-// re-fetched on every action.
+// Self-deletion is blocked both client-side and server-side (returns 400). 
+// Self-edit IS allowed; if the admin renames themselves, the header greeting stays
+// stale until reload because it's not refetched on every action.
 //
-// Rows (and mobile cards) are clickable: tapping anywhere outside the
-// edit/delete buttons calls onUserClick(userId), which the parent
-// AdminPanel uses to jump to the Activity Log sub-tab pre-filtered to
-// that user. The action buttons stop propagation so they only trigger
-// their own behaviour.
+// Rows are clickable: tapping anywhere outside the edit/delete buttons calls onUserClick(userId), 
+// which AdminPanel uses to jump to the Activity Log sub-tab prefiltered to that user. 
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../../context/AuthContext";
@@ -156,7 +151,7 @@ export default function UsersTable({ addToast, onUserClick }) {
           <tbody>
             {users.map((u) => {
               const isSelf = u._id === currentUser._id;
-              const handleRowActivate = () => onUserClick?.(u._id);
+              const handleRowActivate = () => onUserClick?.(u);
               return (
                 <tr
                   key={u._id}
@@ -228,7 +223,7 @@ export default function UsersTable({ addToast, onUserClick }) {
       <div className="expense-cards">
         {users.map((u) => {
           const isSelf = u._id === currentUser._id;
-          const handleCardActivate = () => onUserClick?.(u._id);
+          const handleCardActivate = () => onUserClick?.(u);
           return (
             <div
               key={u._id}

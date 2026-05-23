@@ -1,25 +1,70 @@
 // Admin activity log viewer.
 //
-// Owns its own fetch state for both activities and the user list (for the
-// filter dropdown). Pagination state is local — it's a view concern with
-// no consumers outside this component. The user filter (selectedUserId)
-// is lifted to AdminPanel so UsersTable can pre-seed it before switching
-// the sub-tab here; this component reads it from props and reports
-// changes back via onSelectedUserIdChange.
-// Failed-login attempts are not logged anywhere in the
-// system so they do not appear as a row type here.
+// User filter: typeahead search rather than a dropdown. 
+// Typing fires GET /api/users?search= after a 300 ms debounce; 
+// selecting a suggestion locks in the filter and dismisses the list. 
+//
+// Default date window: Last 30 days. Admins can still select "All time"
+//
+// Page count cap: totalPages is capped at PAGE_CAP in the display. Mongo's
+// countDocuments on a large result set is expensive. We show "400+ pages".
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { getActivities, getUsers } from "../../services/api";
 
 const PAGE_SIZE = 25;
+// Shown as "N+ pages" when the actual count would exceed this
+const PAGE_CAP = 400;
+// Debounce delay for the user search input (ms).
+const SEARCH_DEBOUNCE = 300;
 
-// relative-time formatter. This matches the casual tone of the rest of the UI. 
-// The precise time goes in the title attribute on hover.
-function relativeTime(iso) {
+const ACTION_LABELS = {
+  LOGIN: "Login",
+  LOGOUT: "Logout",
+  REGISTER: "Register",
+  CREATE_EXPENSE: "Create expense",
+  UPDATE_EXPENSE: "Update expense",
+  DELETE_EXPENSE: "Delete expense",
+  CREATE_USER: "Create user",
+  UPDATE_USER: "Update user",
+  DELETE_USER: "Delete user",
+};
+
+// Default to Last 30 days
+const DATE_PRESETS = {
+  "30d": "Last 30 days",
+  today: "Today",
+  "7d": "Last 7 days",
+  all: "All time",
+};
+
+function presetToFrom(preset) {
+  if (preset === "all") return null;
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  if (preset === "today") return d;
+  if (preset === "7d") {
+    d.setDate(d.getDate() - 6);
+    return d;
+  }
+  if (preset === "30d") {
+    d.setDate(d.getDate() - 29);
+    return d;
+  }
+  return null;
+}
+
+function relativeTime(iso, now) {
   const then = new Date(iso);
-  const seconds = Math.round((Date.now() - then.getTime()) / 1000);
-  if (seconds < 60) return "Just now";
+  const seconds = Math.round((now - then.getTime()) / 1000);
+  if (seconds < 120) {
+    return then.toLocaleTimeString("en-AU", {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    });
+  }
   if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
   if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
   if (seconds < 172800) return "Yesterday";
@@ -30,9 +75,6 @@ function relativeTime(iso) {
   });
 }
 
-// Map each ACTION to an icon + a function that builds the summary line from
-// activity.metadata. The fallbacks make the viewer robust to any historical
-// entries that pre-date a metadata convention.
 const ACTION_DISPLAY = {
   LOGIN: { icon: "🔐", label: "logged in" },
   LOGOUT: { icon: "🚪", label: "logged out" },
@@ -79,10 +121,7 @@ const ACTION_DISPLAY = {
 
 function describe(activity) {
   const entry = ACTION_DISPLAY[activity.action];
-  if (!entry) {
-    // Defensive: surface unknown actions rather than rendering nothing.
-    return { icon: "•", text: activity.action.toLowerCase() };
-  }
+  if (!entry) return { icon: "•", text: activity.action.toLowerCase() };
   const text =
     typeof entry.label === "function"
       ? entry.label(activity.metadata)
@@ -93,39 +132,101 @@ function describe(activity) {
 export default function ActivityLog({
   addToast,
   selectedUserId,
-  onSelectedUserIdChange,
+  selectedUsername,
+  onSelectedUserChange,
 }) {
   const [activities, setActivities] = useState([]);
-  const [users, setUsers] = useState([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalCapped, setTotalCapped] = useState(false); // true when count hit PAGE_CAP
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [apiError, setApiError] = useState(null);
 
-  // Fetch the user list once for the filter dropdown. If an admin creates a
-  // new user on the Users sub-tab and switches here without remounting,
-  // they will not see the new option until the next mount.
+  // Local filters
+  const [actionFilter, setActionFilter] = useState("");
+  // Default to 30d
+  const [datePreset, setDatePreset] = useState("30d");
+
+  // Ticks every 10s so relative timestamps on the visible page stay live.
+  // Without this, "Just now" entries never update.
+  const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    getUsers()
-      .then(setUsers)
-      .catch(() => {
-        // Non-fatal: the activity log still works without the dropdown.
-        // The fetch error surfaces below if the activities query also fails.
-      });
+    const id = setInterval(() => setNow(Date.now()), 10_000);
+    return () => clearInterval(id);
   }, []);
 
-  // Whenever the filter changes (from either the dropdown here or a user
-  // row click in UsersTable), reset back to page 1 so we never land on a
-  // non-existent page. The fetch effect below will also fire, and the
-  // cancelled-flag pattern in there discards any response from the
-  // intermediate (selectedUserId-changed-but-page-not-yet-reset) fetch.
+  // User search typeahead state.
+  const [userQuery, setUserQuery] = useState(selectedUsername || "");
+  const [suggestions, setSuggestions] = useState([]);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const searchRef = useRef(null);
+  const debounceRef = useRef(null);
+
+  // Keep the text input in sync when AdminPanel pre-seeds a user (e.g. from a UsersTable row click)
+  useEffect(() => {
+    setUserQuery(selectedUsername || "");
+  }, [selectedUsername]);
+
+  // Debounced user search. Only fires when the input has content and no user
+  // is locked in yet (once locked, typing is blocked until cleared)
+  const handleUserQueryChange = useCallback((e) => {
+    const q = e.target.value;
+    setUserQuery(q);
+
+    // Changing the text clears any locked selection
+    if (selectedUserId) onSelectedUserChange(null);
+
+    clearTimeout(debounceRef.current);
+    if (!q.trim()) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+    debounceRef.current = setTimeout(() => {
+      setSuggestionsLoading(true);
+      getUsers({ search: q })
+        .then((results) => {
+          setSuggestions(results);
+          setShowSuggestions(true);
+        })
+        .catch(() => setSuggestions([]))
+        .finally(() => setSuggestionsLoading(false));
+    }, SEARCH_DEBOUNCE);
+  }, [selectedUserId, onSelectedUserChange]);
+
+  const selectUser = useCallback((user) => {
+    onSelectedUserChange(user);
+    setUserQuery(user.username);
+    setSuggestions([]);
+    setShowSuggestions(false);
+  }, [onSelectedUserChange]);
+
+  const clearUserFilter = useCallback(() => {
+    onSelectedUserChange(null);
+    setUserQuery("");
+    setSuggestions([]);
+    setShowSuggestions(false);
+  }, [onSelectedUserChange]);
+
+  // Close suggestions on outside click
+  useEffect(() => {
+    function handleClick(e) {
+      if (searchRef.current && !searchRef.current.contains(e.target)) {
+        setShowSuggestions(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  // Reset page on any filter change
   useEffect(() => {
     setPage(1);
-  }, [selectedUserId]);
+  }, [selectedUserId, actionFilter, datePreset]);
 
-  // Refetch activities on page or filter change. Two fetch paths share this
-  // effect because they want identical loading / error handling.
+  // Fetch 
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
@@ -133,13 +234,23 @@ export default function ActivityLog({
 
     const params = { page, limit: PAGE_SIZE };
     if (selectedUserId) params.userId = selectedUserId;
+    if (actionFilter) params.action = actionFilter;
+    const from = presetToFrom(datePreset);
+    if (from) params.from = from.toISOString();
 
     getActivities(params)
       .then((data) => {
         if (cancelled) return;
         setActivities(data.activities);
         setTotal(data.total);
-        setTotalPages(data.totalPages);
+        const rawPages = data.totalPages;
+        if (rawPages > PAGE_CAP) {
+          setTotalPages(PAGE_CAP);
+          setTotalCapped(true);
+        } else {
+          setTotalPages(rawPages);
+          setTotalCapped(false);
+        }
       })
       .catch((err) => {
         if (cancelled) return;
@@ -151,16 +262,16 @@ export default function ActivityLog({
         if (!cancelled) setLoading(false);
       });
 
-    // Cancel flag protects against stale responses landing after a faster
-    // newer request — e.g. user clicks Next twice quickly.
-    return () => {
-      cancelled = true;
-    };
-  }, [page, selectedUserId, addToast]);
+    return () => { cancelled = true; };
+  }, [page, selectedUserId, actionFilter, datePreset, addToast]);
 
-  const handleUserFilter = (e) => {
-    onSelectedUserIdChange(e.target.value);
-    // page reset is handled by the effect on selectedUserId above
+  const hasActiveFilters =
+    Boolean(selectedUserId) || Boolean(actionFilter) || datePreset !== "30d";
+
+  const clearAllFilters = () => {
+    clearUserFilter();
+    setActionFilter("");
+    setDatePreset("30d");
   };
 
   return (
@@ -176,26 +287,115 @@ export default function ActivityLog({
             }}
           >
             {total} entr{total !== 1 ? "ies" : "y"}
-            {selectedUserId && " (filtered)"}
+            {hasActiveFilters && " (filtered)"}
           </p>
         </div>
 
         <div className="filters">
+          {/* User search typeahead */}
+          <div className="user-search-wrap" ref={searchRef}>
+            <div className="user-search-field">
+              <input
+                type="text"
+                className="filter-search user-search-input"
+                placeholder="Search user…"
+                value={userQuery}
+                onChange={handleUserQueryChange}
+                onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+                aria-label="Filter by username"
+                aria-autocomplete="list"
+                aria-expanded={showSuggestions}
+              />
+              {selectedUserId && (
+                <button
+                  type="button"
+                  className="user-search-clear"
+                  onClick={clearUserFilter}
+                  aria-label="Clear user filter"
+                >
+                  ×
+                </button>
+              )}
+              {suggestionsLoading && (
+                <span className="user-search-spinner" aria-hidden="true" />
+              )}
+            </div>
+            {showSuggestions && suggestions.length > 0 && (
+              <ul className="user-search-suggestions" role="listbox">
+                {suggestions.map((u) => (
+                  <li
+                    key={u._id}
+                    className="user-search-option"
+                    role="option"
+                    aria-selected={u._id === selectedUserId}
+                    onMouseDown={(e) => {
+                      // mousedown fires before blur, preventing the outside-click
+                      // handler from closing the list before the click registers.
+                      e.preventDefault();
+                      selectUser(u);
+                    }}
+                  >
+                    <span className="user-search-option-name">{u.username}</span>
+                    <span className="user-search-option-role">{u.role}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {showSuggestions && !suggestionsLoading && suggestions.length === 0 && (
+              <div className="user-search-empty">No users found</div>
+            )}
+          </div>
+
           <select
             className="filter-select"
-            value={selectedUserId}
-            onChange={handleUserFilter}
-            aria-label="Filter by user"
+            value={actionFilter}
+            onChange={(e) => setActionFilter(e.target.value)}
+            aria-label="Filter by action"
           >
-            <option value="">All users</option>
-            {users.map((u) => (
-              <option key={u._id} value={u._id}>
-                {u.username}
+            <option value="">All actions</option>
+            {Object.entries(ACTION_LABELS).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+
+          <select
+            className="filter-select"
+            value={datePreset}
+            onChange={(e) => setDatePreset(e.target.value)}
+            aria-label="Filter by date range"
+          >
+            {Object.entries(DATE_PRESETS).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
               </option>
             ))}
           </select>
         </div>
       </div>
+
+      {hasActiveFilters && (
+        <div className="active-filters">
+          <span className="active-filters-text">
+            Showing entries for{" "}
+            {[
+              selectedUserId && selectedUsername,
+              actionFilter && ACTION_LABELS[actionFilter],
+              datePreset !== "30d" && DATE_PRESETS[datePreset],
+            ]
+              .filter(Boolean)
+              .join(" · ")}
+          </span>
+          <button
+            type="button"
+            className="active-filters-clear"
+            onClick={clearAllFilters}
+          >
+            Clear all
+          </button>
+        </div>
+      )}
 
       {loading ? (
         <div className="loading-state">
@@ -212,8 +412,8 @@ export default function ActivityLog({
         <div className="empty-list">
           <span className="empty-list-icon">🗂️</span>
           <p>
-            {selectedUserId
-              ? "No activity for this user yet."
+            {hasActiveFilters
+              ? "No activity matches these filters."
               : "No activity recorded yet."}
           </p>
         </div>
@@ -234,7 +434,7 @@ export default function ActivityLog({
                     <span className="activity-text"> {text}</span>
                   </div>
                   <span className="activity-time" title={fullTime}>
-                    {relativeTime(a.createdAt)}
+                    {relativeTime(a.createdAt, now)}
                   </span>
                 </li>
               );
@@ -251,7 +451,7 @@ export default function ActivityLog({
                 ← Prev
               </button>
               <span className="pagination-info">
-                Page {page} of {totalPages}
+                Page {page} of {totalCapped ? `${PAGE_CAP}+` : totalPages}
               </span>
               <button
                 className="pagination-btn"

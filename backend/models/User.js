@@ -1,15 +1,12 @@
 // Mongoose model for application users.
 //
 // Passwords are never stored in plaintext. Routes never touch bcrypt directly;
-// they call setPassword() and verifyPassword() on this model, which keeps the
-// hashing details (algorithm, cost factor) in one place.
+// they call setPassword() and verifyPassword() 
 
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 
-// bcrypt cost factor. 10 is a sensible default: roughly
-// 100 ms per hash, which is fast enough for login UX and slow enough to make
-// offline brute-forcing expensive.
+// bcrypt cost factor. 10 is fine  
 const BCRYPT_COST = 10;
 
 const userSchema = new mongoose.Schema(
@@ -42,9 +39,7 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Strip passwordHash (and the mongoose version key) from any res.json(user)
-// call. Defence in depth: routes also explicitly pick which fields they
-// return, but this catches anything that slips through.
+// Strip passwordHash (and the mongoose version key) from any res.json(user) call. 
 userSchema.set("toJSON", {
   transform(_doc, ret) {
     delete ret.passwordHash;
@@ -59,7 +54,7 @@ userSchema.methods.setPassword = async function (plainPassword) {
   this.passwordHash = await bcrypt.hash(plainPassword, BCRYPT_COST);
 };
 
-// Compare a plaintext attempt against the stored hash.
+// Compare a password attempt against the stored hash.
 userSchema.methods.verifyPassword = function (plainPassword) {
   return bcrypt.compare(plainPassword, this.passwordHash);
 };

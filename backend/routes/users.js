@@ -3,7 +3,8 @@
 // Every route is gated by requireAuth + requireAdmin. The frontend hides the
 // admin tab from non-admins, but the server is the source of truth.
 //
-// GET    /api/users        → list every user
+// GET    /api/users        → list users; ?search=<fragment> filters by username
+//                           prefix/substring (case-insensitive, max 20 results)
 // POST   /api/users        → create a new user (admin can set role on create)
 // PUT    /api/users/:id    → update username / role / password (password optional)
 // DELETE /api/users/:id    → delete a user (cannot delete self)
@@ -67,8 +68,19 @@ router.use(requireAuth, requireAdmin);
 
 router.get("/", async (req, res) => {
   try {
-    // Sorted newest-first for a sensible default in the admin table.
-    const users = await User.find().sort({ createdAt: -1 });
+    const query = {};
+    // ?search= filters by username substring (case-insensitive). Results are
+    // capped at 20 so the typeahead never over-fetches. Without the param the
+    // full list is returned (sorted newest-first) for the Users admin table.
+    const MAX_SEARCH_RESULTS = 20;
+    if (req.query.search) {
+      // Escape regex metacharacters so a fragment like "a.b" is literal.
+      const escaped = req.query.search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      query.username = { $regex: escaped, $options: "i" };
+    }
+    const users = await User.find(query)
+      .sort({ createdAt: -1 })
+      .limit(req.query.search ? MAX_SEARCH_RESULTS : 0); // 0 = no limit
     res.json(users.map(publicUser));
   } catch (err) {
     console.error("GET /users error:", err.message);
