@@ -129,7 +129,8 @@ function describe(activity) {
   return { icon: entry.icon, text };
 }
 
-// LOGIN/LOGOUT stay neutral (no colour) so the log isn't a wall of colour.
+// Map an action to a colour tone used as a left-border accent on the row.
+// LOGIN/LOGOUT stay neutral (no accent) so the log isn't a wall of colour.
 function actionTone(action) {
   if (action === "REGISTER" || action.startsWith("CREATE_")) return "create";
   if (action.startsWith("UPDATE_")) return "update";
@@ -145,6 +146,7 @@ export default function ActivityLog({
 }) {
   const [activities, setActivities] = useState([]);
   const [page, setPage] = useState(1);
+  const [pageInput, setPageInput] = useState("1"); // draft value while typing
   const [totalPages, setTotalPages] = useState(1);
   const [totalCapped, setTotalCapped] = useState(false); // true when count hit PAGE_CAP
   const [total, setTotal] = useState(0);
@@ -233,6 +235,12 @@ export default function ActivityLog({
   useEffect(() => {
     setPage(1);
   }, [selectedUserId, actionFilter, datePreset]);
+
+  // Keep the input in sync with the committed page (Prev/Next buttons, filter resets). 
+  // Doesn't run while the user is mid-type (was causing issues)
+  useEffect(() => {
+    setPageInput(String(page));
+  }, [page]);
 
   // Fetch 
   useEffect(() => {
@@ -463,7 +471,36 @@ export default function ActivityLog({
                 ← Prev
               </button>
               <span className="pagination-info">
-                Page {page} of {totalCapped ? `${PAGE_CAP}+` : totalPages}
+                Page{" "}
+                <input
+                  className="pagination-page-input"
+                  type="number"
+                  min={1}
+                  max={totalPages}
+                  value={pageInput}
+                  aria-label="Go to page"
+                  onChange={(e) => setPageInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      const val = parseInt(pageInput, 10);
+                      if (!Number.isNaN(val) && val >= 1 && val <= totalPages) {
+                        setPage(val);
+                      } else {
+                        setPageInput(String(page));
+                      }
+                      e.target.blur();
+                    }
+                  }}
+                  onBlur={() => {
+                    const val = parseInt(pageInput, 10);
+                    if (!Number.isNaN(val) && val >= 1 && val <= totalPages) {
+                      setPage(val);
+                    } else {
+                      setPageInput(String(page));
+                    }
+                  }}
+                />{" "}
+                of {totalCapped ? `${PAGE_CAP}+` : totalPages}
               </span>
               <button
                 className="pagination-btn"

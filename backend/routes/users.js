@@ -1,18 +1,17 @@
-// routes/users.js — admin-only user-management API.
+// routes/users.js: admin-only user-management API.
 //
 // Every route is gated by requireAuth + requireAdmin. The frontend hides the
 // admin tab from non-admins, but the server is the source of truth.
 //
-// GET    /api/users        → list users; ?search=<fragment> filters by username
-//                           prefix/substring (case-insensitive, max 20 results)
-// POST   /api/users        → create a new user (admin can set role on create)
-// PUT    /api/users/:id    → update username / role / password (password optional)
-// DELETE /api/users/:id    → delete a user (cannot delete self)
+// GET    /api/users        -> paginated list; ?page=, ?limit= (default 25, max 100)
+//                           Returns { users, total, page, totalPages }.
+//                           ?search=<> switches to typeahead mode (substring match, max 20 results, no pagination envelope)
+// POST   /api/users        -> create a new user (admin can set role on create)
+// PUT    /api/users/:id    -> update username / role / password (password change optional)
+// DELETE /api/users/:id    -> delete a user (cannot delete self)
 //
-// Activity logging: every successful mutation is logged as CREATE/UPDATE/
-// DELETE_USER attributed to the calling admin, with a metadata snapshot of
-// the target user (id, username, role) so the audit log remains readable
-// after the target is deleted or renamed.
+// Activity logging: logging CREATE/UPDATE/DELETE_USER based on the calling admin, 
+// with metadata snapshot of target user (id, username, role) so the audit log remains readable after deletion or renaming
 
 const express = require("express");
 const router = express.Router();
@@ -24,17 +23,16 @@ const { requireAuth, requireAdmin } = require("../middleware/auth");
 const { logActivity } = require("../utils/logActivity");
 const { ACTIONS } = require("../models/UserActivity");
 
-// Validation rules mirror /api/auth/register. Kept inline rather than
-// extracted to a shared module — a 4-line duplication is easier to read
-// than threading through a validator helper, it as a future cleanup if it matters.
 const USERNAME_REGEX = /^[a-z0-9_]+$/;
 const USERNAME_MIN = 3;
 const USERNAME_MAX = 30;
 const MIN_PASSWORD_LENGTH = 6;
 const ROLES = ["user", "admin"];
 
-// Shape of a user object returned to admin clients. Same fields as the
-// /auth helpers — never exposes passwordHash.
+const DEFAULT_LIMIT = 25;
+const MAX_LIMIT = 100;
+const MAX_SEARCH_RESULTS = 20;
+
 const publicUser = (user) => ({
   _id: user._id,
   username: user.username,
@@ -61,6 +59,13 @@ function validateUsername(username) {
   return null;
 }
 
+function parsePositiveInt(value, fallback) {
+  if (value === undefined) return fallback;
+  const n = Number(value);
+  if (!Number.isInteger(n) || n < 1) return null;
+  return n;
+}
+
 // Every route in this file requires admin access.
 router.use(requireAuth, requireAdmin);
 
@@ -68,20 +73,49 @@ router.use(requireAuth, requireAdmin);
 
 router.get("/", async (req, res) => {
   try {
-    const query = {};
-    // ?search= filters by username substring (case-insensitive). Results are
-    // capped at 20 so the typeahead never over-fetches. Without the param the
-    // full list is returned (sorted newest-first) for the Users admin table.
-    const MAX_SEARCH_RESULTS = 20;
+    // typeahead mode: substring match, max 20, no pagination.
+    // Used by the ActivityLog and UsersTable search inputs.
     if (req.query.search) {
-      // Escape regex metacharacters so a fragment like "a.b" is literal.
       const escaped = req.query.search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      query.username = { $regex: escaped, $options: "i" };
+      const users = await User.find({
+        username: { $regex: escaped, $options: "i" },
+      })
+        .sort({ createdAt: -1 })
+        .limit(MAX_SEARCH_RESULTS);
+      return res.json(users.map(publicUser));
     }
-    const users = await User.find(query)
-      .sort({ createdAt: -1 })
-      .limit(req.query.search ? MAX_SEARCH_RESULTS : 0); // 0 = no limit
-    res.json(users.map(publicUser));
+
+    // Paginated list mode. Optional ?userId= filters to a single user by _id.
+    const page = parsePositiveInt(req.query.page, 1);
+    if (page === null) {
+      return res.status(400).json({ error: "page must be a positive integer" });
+    }
+    let limit = parsePositiveInt(req.query.limit, DEFAULT_LIMIT);
+    if (limit === null) {
+      return res.status(400).json({ error: "limit must be a positive integer" });
+    }
+    if (limit > MAX_LIMIT) limit = MAX_LIMIT;
+
+    const filter = {};
+    if (req.query.userId) {
+      if (!mongoose.Types.ObjectId.isValid(req.query.userId)) {
+        return res.status(400).json({ error: "Invalid userId format" });
+      }
+      filter._id = req.query.userId;
+    }
+
+    const skip = (page - 1) * limit;
+    const [users, total] = await Promise.all([
+      User.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
+      User.countDocuments(filter),
+    ]);
+
+    res.json({
+      users: users.map(publicUser),
+      total,
+      page,
+      totalPages: Math.max(1, Math.ceil(total / limit)),
+    });
   } catch (err) {
     console.error("GET /users error:", err.message);
     res.status(500).json({ error: "Failed to fetch users" });

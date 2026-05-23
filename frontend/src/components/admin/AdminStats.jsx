@@ -1,10 +1,13 @@
-// Compact KPI strip on the admin sub-nav. Three numbers fetched once:
+// Compact KPI strip above the admin sub-nav. Three numbers fetched once on mount:
 // total users, total activity entries, and entries in the last 24 hours.
 //
-// Each call uses an endpoint:
-//   - getUsers() returns the full list 
-//   - getActivities({ limit:1 }) returns { total } cheaply (doesn't gate total)
-//   - getActivities({ from: 24h-ago-ISO, limit: 1 }) does the same with a date filter
+// Each call uses an existing endpoint:
+//   - getUsers() returns the full list — count its length
+//   - getActivities() returns { total } cheaply (limit doesn't gate total)
+//   - getActivities() does the same with a date filter
+//
+// Kept intentionally separate from the Dashboard summary cards 
+// these are operational counts for an admin
 
 import React, { useState, useEffect } from "react";
 import { getUsers, getActivities } from "../../services/api";
@@ -22,14 +25,14 @@ export default function AdminStats() {
     const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
     Promise.all([
-      getUsers(),
+      getUsers({ limit: 1 }),
       getActivities({ limit: 1 }),
       getActivities({ limit: 1, from: dayAgo }),
     ])
-      .then(([users, all, last24]) => {
+      .then(([usersData, all, last24]) => {
         if (cancelled) return;
         setStats({
-          users: users.length,
+          users: usersData.total,
           activities: all.total,
           activities24h: last24.total,
         });
