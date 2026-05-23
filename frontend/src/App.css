@@ -546,6 +546,32 @@
   background: var(--color-surface-2);
 }
 
+/* Clickable rows on the admin Users table: tapping a row navigates to
+   that user's activity log. The action buttons inside stop propagation,
+   so they keep working as expected. */
+.users-table-row.clickable {
+  cursor: pointer;
+}
+
+.users-table-row.clickable:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
+.users-table-card.clickable {
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.users-table-card.clickable:hover {
+  background: var(--color-surface-2);
+}
+
+.users-table-card.clickable:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
 .expense-title-cell {
   font-weight: 500;
   color: var(--color-text);

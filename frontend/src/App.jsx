@@ -50,7 +50,12 @@ function AuthenticatedApp() {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [apiError, setApiError] = useState(null);
-  const [activeTab, setActiveTab] = useState("dashboard"); // 'dashboard' | 'expenses' | 'admin'
+  // Admins land on the Admin tab; everyone else on Dashboard.
+  // Only used as the initial value — admins can still freely navigate
+  // to Dashboard or Expenses from the tab nav once mounted.
+  const [activeTab, setActiveTab] = useState(
+    user.role === "admin" ? "admin" : "dashboard"
+  ); // 'dashboard' | 'expenses' | 'admin'
   const [modalOpen, setModalOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState(null); // null = add mode
   const [toasts, setToasts] = useState([]);

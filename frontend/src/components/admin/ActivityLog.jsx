@@ -1,8 +1,11 @@
 // Admin activity log viewer.
 //
 // Owns its own fetch state for both activities and the user list (for the
-// filter dropdown). Filter and pagination state is local; switching away
-// from this tab unmounts and resets everything
+// filter dropdown). Pagination state is local — it's a view concern with
+// no consumers outside this component. The user filter (selectedUserId)
+// is lifted to AdminPanel so UsersTable can pre-seed it before switching
+// the sub-tab here; this component reads it from props and reports
+// changes back via onSelectedUserIdChange.
 // Failed-login attempts are not logged anywhere in the
 // system so they do not appear as a row type here.
 
@@ -87,13 +90,16 @@ function describe(activity) {
   return { icon: entry.icon, text };
 }
 
-export default function ActivityLog({ addToast }) {
+export default function ActivityLog({
+  addToast,
+  selectedUserId,
+  onSelectedUserIdChange,
+}) {
   const [activities, setActivities] = useState([]);
   const [users, setUsers] = useState([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
-  const [selectedUserId, setSelectedUserId] = useState("");
   const [loading, setLoading] = useState(true);
   const [apiError, setApiError] = useState(null);
 
@@ -108,6 +114,15 @@ export default function ActivityLog({ addToast }) {
         // The fetch error surfaces below if the activities query also fails.
       });
   }, []);
+
+  // Whenever the filter changes (from either the dropdown here or a user
+  // row click in UsersTable), reset back to page 1 so we never land on a
+  // non-existent page. The fetch effect below will also fire, and the
+  // cancelled-flag pattern in there discards any response from the
+  // intermediate (selectedUserId-changed-but-page-not-yet-reset) fetch.
+  useEffect(() => {
+    setPage(1);
+  }, [selectedUserId]);
 
   // Refetch activities on page or filter change. Two fetch paths share this
   // effect because they want identical loading / error handling.
@@ -144,8 +159,8 @@ export default function ActivityLog({ addToast }) {
   }, [page, selectedUserId, addToast]);
 
   const handleUserFilter = (e) => {
-    setSelectedUserId(e.target.value);
-    setPage(1); // reset to page 1 so we never land on a non-existent page
+    onSelectedUserIdChange(e.target.value);
+    // page reset is handled by the effect on selectedUserId above
   };
 
   return (

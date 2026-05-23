@@ -5,6 +5,12 @@
 // allowed; if the admin renames themselves, the header greeting stays
 // stale until reload because it's sourced from AuthContext rather than
 // re-fetched on every action.
+//
+// Rows (and mobile cards) are clickable: tapping anywhere outside the
+// edit/delete buttons calls onUserClick(userId), which the parent
+// AdminPanel uses to jump to the Activity Log sub-tab pre-filtered to
+// that user. The action buttons stop propagation so they only trigger
+// their own behaviour.
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../../context/AuthContext";
@@ -23,7 +29,7 @@ const fmtDate = (iso) =>
     day: "numeric",
   });
 
-export default function UsersTable({ addToast }) {
+export default function UsersTable({ addToast, onUserClick }) {
   const { user: currentUser } = useAuth();
 
   const [users, setUsers] = useState([]);
@@ -150,8 +156,22 @@ export default function UsersTable({ addToast }) {
           <tbody>
             {users.map((u) => {
               const isSelf = u._id === currentUser._id;
+              const handleRowActivate = () => onUserClick?.(u._id);
               return (
-                <tr key={u._id}>
+                <tr
+                  key={u._id}
+                  className="users-table-row clickable"
+                  onClick={handleRowActivate}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      handleRowActivate();
+                    }
+                  }}
+                  tabIndex={0}
+                  role="button"
+                  aria-label={`View activity for ${u.username}`}
+                >
                   <td className="expense-title-cell">
                     {u.username}
                     {isSelf && (
@@ -173,7 +193,10 @@ export default function UsersTable({ addToast }) {
                     <div className="actions-cell">
                       <button
                         className="btn-icon edit"
-                        onClick={() => openEditModal(u)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openEditModal(u);
+                        }}
                         title="Edit user"
                       >
                         ✏️
@@ -183,7 +206,10 @@ export default function UsersTable({ addToast }) {
                       {!isSelf && (
                         <button
                           className="btn-icon delete"
-                          onClick={() => handleDelete(u)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(u);
+                          }}
                           title="Delete user"
                         >
                           🗑️
@@ -202,8 +228,22 @@ export default function UsersTable({ addToast }) {
       <div className="expense-cards">
         {users.map((u) => {
           const isSelf = u._id === currentUser._id;
+          const handleCardActivate = () => onUserClick?.(u._id);
           return (
-            <div key={u._id} className="expense-card">
+            <div
+              key={u._id}
+              className="expense-card users-table-card clickable"
+              onClick={handleCardActivate}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  handleCardActivate();
+                }
+              }}
+              tabIndex={0}
+              role="button"
+              aria-label={`View activity for ${u.username}`}
+            >
               <div className="expense-card-header">
                 <div className="expense-card-title">
                   {u.username}
@@ -221,7 +261,10 @@ export default function UsersTable({ addToast }) {
                 <div className="actions-cell">
                   <button
                     className="btn-icon edit"
-                    onClick={() => openEditModal(u)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openEditModal(u);
+                    }}
                     title="Edit user"
                   >
                     ✏️
@@ -229,7 +272,10 @@ export default function UsersTable({ addToast }) {
                   {!isSelf && (
                     <button
                       className="btn-icon delete"
-                      onClick={() => handleDelete(u)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(u);
+                      }}
                       title="Delete user"
                     >
                       🗑️
