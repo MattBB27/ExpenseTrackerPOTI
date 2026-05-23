@@ -28,14 +28,14 @@ export const CATEGORIES = [
 
 export const CATEGORY_COLORS = {
   "Food & Dining": "#ff6b6b",
-  "Transport": "#ffd166",
+  "Transport": "#fcd884",
   "Housing & Rent": "#06d6a0",
   "Utilities": "#118ab2",
   "Entertainment": "#a855f7",
   "Healthcare": "#f77f00",
-  "Shopping": "#ff6584",
-  "Education": "#43c98b",
-  "Travel": "#6c63ff",
+  "Shopping": "#ff65de",
+  "Education": "#fcfcfc",
+  "Travel": "#4c43fa",
   "Other": "#8b8fa8",
 };
 
@@ -51,8 +51,6 @@ function AuthenticatedApp() {
   const [loading, setLoading] = useState(true);
   const [apiError, setApiError] = useState(null);
   // Admins land on the Admin tab; everyone else on Dashboard.
-  // Only used as the initial value — admins can still freely navigate
-  // to Dashboard or Expenses from the tab nav once mounted.
   const [activeTab, setActiveTab] = useState(
     user.role === "admin" ? "admin" : "dashboard"
   ); // 'dashboard' | 'expenses' | 'admin'
@@ -71,7 +69,7 @@ function AuthenticatedApp() {
   }, []);
 
   // --- Data fetching ---
-  // Always fetches ALL expenses — filtering is done client-side inside ExpenseList,
+  // Always fetches ALL expenses, filtering is done client-side inside ExpenseList,
   // so the Dashboard always receives the complete unfiltered data (due to issues caused by filtering expenses on Expenses tab)
 
   const fetchExpenses = useCallback(async () => {
@@ -207,7 +205,7 @@ function AuthenticatedApp() {
             </button>
           </div>
 
-          {/* Hide the global "+ Add Expense" on the admin tab — UsersTable
+          {/* Hide the global "+ Add Expense" on the admin tab. UsersTable
               has its own "+ Add User" primary action. */}
           {activeTab !== "admin" && (
             <button className="btn-add" onClick={openAddModal}>

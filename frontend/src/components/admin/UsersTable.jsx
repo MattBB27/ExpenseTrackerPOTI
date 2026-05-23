@@ -1,7 +1,7 @@
 // Admin users table
 //
 // Self-deletion is blocked both client-side and server-side (returns 400). 
-// Self-edit IS allowed; if the admin renames themselves, the header greeting stays
+// Self-edit IS allowed. if admin renames themselves, the header greeting stays
 // stale until reload because it's not refetched on every action.
 //
 // Rows are clickable: tapping anywhere outside the edit/delete buttons calls onUserClick(userId), 
@@ -145,6 +145,7 @@ export default function UsersTable({ addToast, onUserClick }) {
               <th>Username</th>
               <th>Role</th>
               <th>Created</th>
+              <th aria-label="View activity"></th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -184,6 +185,11 @@ export default function UsersTable({ addToast, onUserClick }) {
                     </span>
                   </td>
                   <td className="expense-date">{fmtDate(u.createdAt)}</td>
+                  <td className="view-activity-cell">
+                    <span className="view-activity-hint" aria-hidden="true">
+                      View activity →
+                    </span>
+                  </td>
                   <td>
                     <div className="actions-cell">
                       <button
@@ -253,6 +259,9 @@ export default function UsersTable({ addToast, onUserClick }) {
               </div>
               <div className="expense-card-footer">
                 <span className="expense-date">{fmtDate(u.createdAt)}</span>
+                <span className="view-activity-hint view-activity-hint-card" aria-hidden="true">
+                  View activity →
+                </span>
                 <div className="actions-cell">
                   <button
                     className="btn-icon edit"

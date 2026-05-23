@@ -129,6 +129,14 @@ function describe(activity) {
   return { icon: entry.icon, text };
 }
 
+// LOGIN/LOGOUT stay neutral (no colour) so the log isn't a wall of colour.
+function actionTone(action) {
+  if (action === "REGISTER" || action.startsWith("CREATE_")) return "create";
+  if (action.startsWith("UPDATE_")) return "update";
+  if (action.startsWith("DELETE_")) return "delete";
+  return "neutral";
+}
+
 export default function ActivityLog({
   addToast,
   selectedUserId,
@@ -425,7 +433,11 @@ export default function ActivityLog({
               const username = a.user?.username || "(deleted user)";
               const fullTime = new Date(a.createdAt).toLocaleString("en-AU");
               return (
-                <li key={a._id} className="activity-row">
+                <li
+                  key={a._id}
+                  className="activity-row"
+                  data-tone={actionTone(a.action)}
+                >
                   <span className="activity-icon" aria-hidden="true">
                     {icon}
                   </span>

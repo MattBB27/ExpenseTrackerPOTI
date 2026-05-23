@@ -8,6 +8,7 @@
 import React, { useState, useCallback } from "react";
 import UsersTable from "./UsersTable";
 import ActivityLog from "./ActivityLog";
+import AdminStats from "./AdminStats";
 
 export default function AdminPanel({ addToast }) {
   const [subTab, setSubTab] = useState("users");
@@ -23,6 +24,12 @@ export default function AdminPanel({ addToast }) {
 
   return (
     <div className="admin-panel">
+      <div className="admin-header">
+        <span className="admin-header-label">Admin Dashboard</span>
+      </div>
+
+      <AdminStats />
+
       <nav className="admin-subnav" role="tablist">
         <button
           role="tab"
