@@ -61,6 +61,9 @@ export const getMe = () => api.get("/auth/me").then((r) => r.data);
 export const getUsers = (params = {}) =>
   api.get("/users", { params }).then((r) => r.data);
 
+export const getDeletedUsers = () =>
+  api.get("/users/deleted").then((r) => r.data);
+
 export const createUser = (data) =>
   api.post("/users", data).then((r) => r.data);
 

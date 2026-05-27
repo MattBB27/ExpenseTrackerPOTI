@@ -122,6 +122,46 @@ router.get("/", async (req, res) => {
   }
 });
 
+// --- GET /api/users/deleted ---
+
+// Returns accounts deleted by an admin, reconstructed from DELETE_USER activity
+// entries where the user no longer exists in the users collection.
+// Each tombstone: { _id, username, deletedAt }.
+router.get("/deleted", async (req, res) => {
+  try {
+    const entries = await UserActivity.find({ action: ACTIONS.DELETE_USER })
+      .sort({ createdAt: -1 });
+
+    // Filter to entries whose target user is gone from the DB.
+    const targetIds = [...new Set(entries.map((e) => String(e.metadata?.targetUserId)).filter(Boolean))];
+    const stillExist = new Set(
+      (await User.find({ _id: { $in: targetIds } }, "_id")).map((u) => String(u._id))
+    );
+
+    const deleted = entries
+      .filter((e) => e.metadata?.targetUserId && !stillExist.has(String(e.metadata.targetUserId)))
+      .map((e) => ({
+        _id: e.metadata.targetUserId,
+        username: e.metadata.targetUsername || "(unknown)",
+        deletedAt: e.createdAt,
+      }));
+
+    // De-duplicate — keep only the most recent DELETE_USER per target.
+    const seen = new Set();
+    const unique = deleted.filter((d) => {
+      const key = String(d._id);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    res.json(unique);
+  } catch (err) {
+    console.error("GET /users/deleted error:", err.message);
+    res.status(500).json({ error: "Failed to fetch deleted users" });
+  }
+});
+
 // --- POST /api/users ---
 
 router.post("/", async (req, res) => {
@@ -256,11 +296,10 @@ router.delete("/:id", validateObjectId, async (req, res) => {
     const deleted = await User.findByIdAndDelete(req.params.id);
     if (!deleted) return res.status(404).json({ error: "User not found" });
 
-    // Cascade: remove the user's expenses and their activity history.
-    // The admin's CREATE/UPDATE/DELETE_USER entries on this user are
-    // attributed to the admin, not the deleted user, so they survive.
+    // Cascade: remove the user's expenses.
+    // Activity records are intentionally kept — the admin needs the audit trail
+    // and the DELETE_USER entry serves as the tombstone in the deleted-users panel.
     await Expense.deleteMany({ user: deleted._id });
-    await UserActivity.deleteMany({ user: deleted._id });
 
     logActivity({
       userId: req.user._id,

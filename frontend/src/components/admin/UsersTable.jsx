@@ -14,6 +14,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "../../context/AuthContext";
 import {
   getUsers,
+  getDeletedUsers,
   createUser,
   updateUser,
   deleteUser,
@@ -46,6 +47,11 @@ export default function UsersTable({ addToast, onUserClick }) {
   const [editingUser, setEditingUser] = useState(null);
   const [refreshTick, setRefreshTick] = useState(0);
 
+  // Deleted users panel
+  const [showDeleted, setShowDeleted] = useState(false);
+  const [deletedUsers, setDeletedUsers] = useState([]);
+  const [deletedLoading, setDeletedLoading] = useState(false);
+
   // Search typeahead like ActivityLog.
   const [userQuery, setUserQuery] = useState("");
   const [lockedUser, setLockedUser] = useState(null);
@@ -59,6 +65,18 @@ export default function UsersTable({ addToast, onUserClick }) {
   useEffect(() => {
     setPageInput(String(page));
   }, [page]);
+
+  // Fetch deleted users when the panel is opened.
+  useEffect(() => {
+    if (!showDeleted) return;
+    let cancelled = false;
+    setDeletedLoading(true);
+    getDeletedUsers()
+      .then((data) => { if (!cancelled) setDeletedUsers(data); })
+      .catch(() => { if (!cancelled) setDeletedUsers([]); })
+      .finally(() => { if (!cancelled) setDeletedLoading(false); });
+    return () => { cancelled = true; };
+  }, [showDeleted]);
 
   // Reset page when the locked user filter changes.
   useEffect(() => {
@@ -237,54 +255,115 @@ export default function UsersTable({ addToast, onUserClick }) {
           </p>
         </div>
         <div className="list-header-actions">
-          <div className="user-search-wrap" ref={searchRef}>
-            <div className="user-search-field">
-              <input
-                type="text"
-                className="filter-search user-search-input"
-                placeholder="Search user…"
-                value={userQuery}
-                onChange={handleUserQueryChange}
-                onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
-                aria-label="Filter by username"
-                aria-autocomplete="list"
-                aria-expanded={showSuggestions}
-              />
-              {lockedUser && (
-                <button type="button" className="user-search-clear" onClick={clearSearch} aria-label="Clear user filter">
-                  ×
-                </button>
+          {!showDeleted && (
+            <div className="user-search-wrap" ref={searchRef}>
+              <div className="user-search-field">
+                <input
+                  type="text"
+                  className="filter-search user-search-input"
+                  placeholder="Search user…"
+                  value={userQuery}
+                  onChange={handleUserQueryChange}
+                  onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
+                  aria-label="Filter by username"
+                  aria-autocomplete="list"
+                  aria-expanded={showSuggestions}
+                />
+                {lockedUser && (
+                  <button type="button" className="user-search-clear" onClick={clearSearch} aria-label="Clear user filter">
+                    ×
+                  </button>
+                )}
+                {suggestionsLoading && (
+                  <span className="user-search-spinner" aria-hidden="true" />
+                )}
+              </div>
+              {showSuggestions && suggestions.length > 0 && (
+                <ul className="user-search-suggestions" role="listbox">
+                  {suggestions.map((u) => (
+                    <li
+                      key={u._id}
+                      className="user-search-option"
+                      role="option"
+                      aria-selected={u._id === lockedUser?._id}
+                      onMouseDown={(e) => { e.preventDefault(); selectUser(u); }}
+                    >
+                      <span className="user-search-option-name">{u.username}</span>
+                      <span className="user-search-option-role">{u.role}</span>
+                    </li>
+                  ))}
+                </ul>
               )}
-              {suggestionsLoading && (
-                <span className="user-search-spinner" aria-hidden="true" />
+              {showSuggestions && !suggestionsLoading && suggestions.length === 0 && (
+                <div className="user-search-empty">No users found</div>
               )}
             </div>
-            {showSuggestions && suggestions.length > 0 && (
-              <ul className="user-search-suggestions" role="listbox">
-                {suggestions.map((u) => (
-                  <li
-                    key={u._id}
-                    className="user-search-option"
-                    role="option"
-                    aria-selected={u._id === lockedUser?._id}
-                    onMouseDown={(e) => { e.preventDefault(); selectUser(u); }}
-                  >
-                    <span className="user-search-option-name">{u.username}</span>
-                    <span className="user-search-option-role">{u.role}</span>
-                  </li>
-                ))}
-              </ul>
-            )}
-            {showSuggestions && !suggestionsLoading && suggestions.length === 0 && (
-              <div className="user-search-empty">No users found</div>
-            )}
-          </div>
-          <button className="btn-add" onClick={openAddModal}>+ Add User</button>
+          )}
+          <button
+            className={`btn-deleted-toggle${showDeleted ? " active" : ""}`}
+            onClick={() => setShowDeleted((v) => !v)}
+          >
+            {showDeleted ? "← Active users" : "Deleted users"}
+          </button>
+          {!showDeleted && (
+            <button className="btn-add" onClick={openAddModal}>+ Add User</button>
+          )}
         </div>
       </div>
 
-      {/* Desktop table */}
-      <div className="expense-table-wrap">
+      {/* Deleted users panel */}
+      {showDeleted && (
+        <div className="deleted-users-panel">
+          {deletedLoading ? (
+            <div className="loading-state"><div className="spinner" /><p>Loading…</p></div>
+          ) : deletedUsers.length === 0 ? (
+            <div className="empty-list">
+              <span className="empty-list-icon">🗑️</span>
+              <p>No deleted accounts on record.</p>
+            </div>
+          ) : (
+            <div className="expense-table-wrap">
+              <table className="expense-table">
+                <thead>
+                  <tr>
+                    <th>Username</th>
+                    <th>Deleted</th>
+                    <th aria-label="View activity"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {deletedUsers.map((u) => (
+                    <tr
+                      key={String(u._id)}
+                      className="users-table-row clickable"
+                      onClick={() => onUserClick?.(u)}
+                      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onUserClick?.(u); } }}
+                      tabIndex={0}
+                      role="button"
+                      aria-label={`View activity for ${u.username}`}
+                    >
+                      <td className="expense-title-cell">
+                        {u.username}
+                        <span className="user-deleted-tag">deleted</span>
+                      </td>
+                      <td className="expense-date">
+                        {new Date(u.deletedAt).toLocaleDateString("en-AU", { year: "numeric", month: "short", day: "numeric" })}
+                      </td>
+                      <td className="view-activity-cell">
+                        <span className="view-activity-hint" aria-hidden="true">View activity →</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Desktop table — hidden when viewing deleted users */}
+      {!showDeleted && (<>
+        <div className="expense-table-wrap">
         <table className="expense-table">
           <thead>
             <tr>
@@ -335,7 +414,7 @@ export default function UsersTable({ addToast, onUserClick }) {
             })}
           </tbody>
         </table>
-      </div>
+        </div>
 
       {/* Mobile cards */}
       <div className="expense-cards">
@@ -420,6 +499,7 @@ export default function UsersTable({ addToast, onUserClick }) {
           </button>
         </div>
       )}
+      </>)}
 
       {modalOpen && (
         <UserForm
