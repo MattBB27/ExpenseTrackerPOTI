@@ -23,7 +23,7 @@ const { requireAuth, requireAdmin } = require("../middleware/auth");
 const { logActivity } = require("../utils/logActivity");
 const { ACTIONS } = require("../models/UserActivity");
 
-const USERNAME_REGEX = /^[a-z0-9_]+$/;
+const USERNAME_REGEX = /^[a-zA-Z0-9_]+$/;
 const USERNAME_MIN = 3;
 const USERNAME_MAX = 30;
 const MIN_PASSWORD_LENGTH = 6;
@@ -54,7 +54,7 @@ function validateUsername(username) {
     return `Username must be ${USERNAME_MIN}–${USERNAME_MAX} characters`;
   }
   if (!USERNAME_REGEX.test(u)) {
-    return "Username can only contain lowercase letters, numbers, and underscores";
+    return "Username can only contain letters, numbers, and underscores";
   }
   return null;
 }

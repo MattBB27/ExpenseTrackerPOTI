@@ -1,12 +1,12 @@
 // Registration form. Client-side validation mirrors the backend's rules
-// (username 3–30 chars, regex /^[a-z0-9_]+$/, password ≥ 6 chars). The
-// backend remains the source of truth - anything that slips past these
+// (username 3–30 chars, password ≥ 6 chars). 
+// The backend remains the source of truth - anything that slips past these
 // checks (e.g. a duplicate username) is surfaced from the API error.
 
 import React, { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 
-const USERNAME_REGEX = /^[a-z0-9_]+$/;
+const USERNAME_REGEX = /^[a-zA-Z0-9_]+$/;
 const USERNAME_MIN = 3;
 const USERNAME_MAX = 30;
 const PASSWORD_MIN = 6;
@@ -21,8 +21,7 @@ function validate({ username, password, confirm }) {
   } else if (u.length < USERNAME_MIN || u.length > USERNAME_MAX) {
     errors.username = `Username must be ${USERNAME_MIN}–${USERNAME_MAX} characters`;
   } else if (!USERNAME_REGEX.test(u)) {
-    errors.username =
-      "Use only lowercase letters, numbers, and underscores";
+    errors.username = "Use only letters, numbers, and underscores";
   }
 
   if (!password) {
@@ -100,7 +99,7 @@ export default function RegisterForm() {
           <p className="auth-error">{fieldErrors.username}</p>
         ) : (
           <p className="auth-hint">
-            3–30 lowercase letters, numbers, or underscores
+            3–30 letters, numbers, or underscores
           </p>
         )}
       </div>

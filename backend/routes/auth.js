@@ -37,6 +37,11 @@ router.post("/register", async (req, res) => {
         .status(400)
         .json({ error: "Username and password are required" });
     }
+    if (!/^[a-zA-Z0-9_]+$/.test(String(username).trim())) {
+      return res.status(400).json({
+        error: "Username can only contain letters, numbers, and underscores",
+      });
+    }
     if (password.length < MIN_PASSWORD_LENGTH) {
       return res.status(400).json({
         error: `Password must be at least ${MIN_PASSWORD_LENGTH} characters`,

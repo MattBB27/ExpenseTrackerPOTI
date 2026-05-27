@@ -166,7 +166,7 @@ GET    /api/activities           Admin: paginated activity log
 
 Three collections:
 
-**`users`**: `username` (unique, lowercase), `passwordHash`, `role` (`user` | `admin`), `createdAt`.
+**`users`**: `username` (unique), `passwordHash`, `role` (`user` | `admin`), `createdAt`.
 
 **`expenses`**: `user` (ref), `title`, `amount`, `category`, `date`, `description`, `createdAt`.
 
