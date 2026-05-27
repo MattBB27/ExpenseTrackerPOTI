@@ -1,10 +1,8 @@
-// Admin user-form modal. Same modal/.form-* styling as ExpenseForm so the
-// admin UI matches the rest of the app.
+// Admin user-form modal. 
 //
 // initialData = null -> create mode (password required).
-// initialData = {...user} -> edit mode (password optional; blank means
-// keep current). Username casing is normalised to lowercase on submit to
-// match the backend's storage rules.
+// initialData = {...user} -> edit mode (password optional; blank means keep current). 
+// Username casing is normalised to lowercase on submit to match the backend's storage rules.
 
 import React, { useState } from "react";
 

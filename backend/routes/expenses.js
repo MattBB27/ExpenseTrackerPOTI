@@ -3,11 +3,11 @@
 // All routes require authentication (requireAuth middleware). Every query is
 // scoped to req.user._id so users only ever see and touch their own data.
 //
-// GET    /api/expenses          → list the current user's expenses (with filters)
-// GET    /api/expenses/summary  → category totals + monthly trends (current user)
-// POST   /api/expenses          → create a new expense for the current user
-// PUT    /api/expenses/:id      → update an expense (must belong to current user)
-// DELETE /api/expenses/:id      → delete an expense (must belong to current user)
+// GET    /api/expenses          -> list the current user's expenses (with filters)
+// GET    /api/expenses/summary  -> category totals + monthly trends (current user)
+// POST   /api/expenses          -> create a new expense for the current user
+// PUT    /api/expenses/:id      -> update an expense (must belong to current user)
+// DELETE /api/expenses/:id      -> delete an expense (must belong to current user)
 
 const express = require("express");
 const router = express.Router();

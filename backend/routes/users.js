@@ -1,4 +1,4 @@
-// routes/users.js: admin-only user-management API.
+// routes/users.js: admin-only user management API.
 //
 // Every route is gated by requireAuth + requireAdmin. The frontend hides the
 // admin tab from non-admins, but the server is the source of truth.

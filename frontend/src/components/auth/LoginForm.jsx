@@ -1,10 +1,9 @@
 // Username + password login form.
 //
 // Local useState only; global auth state lives in AuthContext. The form
-// trusts the backend's generic "Invalid username or password" message.
-// We deliberately do not validate username format on the login screen
-// (a banned-character username could not have been registered in the
-// first place, and surfacing format hints on login would effect UX).
+// trusts the backend's "Invalid username or password" message.
+// Doesn't validate username format on the login screen
+// (a banned-character username could not have been registered in the first place)
 
 
 import React, { useState } from "react";

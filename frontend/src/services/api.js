@@ -1,5 +1,5 @@
-// Axios service for all backend calls.
-// All components import from here.
+// Axios service for all backend calls
+// All components import from here
 
 import axios from "axios";
 
@@ -18,7 +18,7 @@ const api = axios.create({
 // --- Interceptors ---
 
 // Request: attach the current token (if any) on every outgoing request.
-// Reading from localStorage each time means a logout in one tab is picked up on next request 
+// Reading from localStorage each time means a logout in one tab is picked up on NEXT request 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem(TOKEN_KEY);
   if (token) {
@@ -28,7 +28,7 @@ api.interceptors.request.use((config) => {
 });
 
 // Response: on 401, fire a window event so the AuthContext can transition the
-// app to  unauthenticated state. The token guard means that a wrong password login attempt 
+// app to unauthenticated. The token guard means that a wrong password login attempt 
 // would also dispatch `auth:expired`, racing with login form's error handling. 
 api.interceptors.response.use(
   (response) => response,

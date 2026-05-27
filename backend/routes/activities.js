@@ -1,4 +1,4 @@
-// routes/activities.js: admin-only activity log viewer.
+// routes/activities.js - admin-only activity log viewer.
 //
 // GET /api/activities
 //   ?page=<int>          

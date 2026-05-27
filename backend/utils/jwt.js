@@ -2,8 +2,6 @@
 //
 // Token payload deliberately contains only { id, role }. Everything else
 // (username, createdAt, etc.) is fetched from the DB by the auth middleware.
-// Keeping the payload tiny means we don't have to invalidate tokens when
-// non-critical user fields change.
 
 const jwt = require("jsonwebtoken");
 

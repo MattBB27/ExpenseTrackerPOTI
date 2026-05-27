@@ -33,7 +33,7 @@ export default function ExpenseList({
   onDelete,
   onAddClick,
 }) {
-  // Filter state —isolated from the Dashboard
+  // Filter state: isolated from the Dashboard
   const [filterCategory, setFilterCategory] = useState("");
   const [filterMonth, setFilterMonth] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -89,7 +89,7 @@ export default function ExpenseList({
 
         {/* Filters */}
         <div className="filters">
-          {/* Live search — case-insensitive substring match on title +
+          {/* Live search: case-insensitive substring match on title +
               description; combines with the dropdown filters below. */}
           <input
             className="filter-search"
@@ -185,7 +185,7 @@ export default function ExpenseList({
             </div>
           </div>
 
-          {/* Cards (mobile) — CSS toggles visibility against the table above */}
+          {/* Cards (mobile) - CSS toggles visibility against the table above */}
           <div className="expense-cards">
             {filtered.map((expense) => (
               <ExpenseItem

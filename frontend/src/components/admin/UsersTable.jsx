@@ -1,8 +1,7 @@
 // Admin users table
 //
 // Self-deletion is blocked both client-side and server-side (returns 400).
-// Self-edit IS allowed; if the admin renames themselves, the header greeting stays
-// stale until reload because it's not refetched on every action.
+// Self-edit IS allowed but only shows after reload.
 //
 // Rows are clickable: tapping anywhere outside the edit/delete buttons calls
 // onUserClick(user), which AdminPanel uses to jump to the Activity Log sub-tab prefiltered.
@@ -111,7 +110,7 @@ export default function UsersTable({ addToast, onUserClick }) {
     return () => { cancelled = true; };
   }, [page, lockedUser, addToast, refreshTick]);
 
-  // Debounced typeahead — hits the server exactly as ActivityLog does.
+  // Debounced typeahead: hits the server exactly as ActivityLog does.
   const handleUserQueryChange = useCallback((e) => {
     const q = e.target.value;
     setUserQuery(q);

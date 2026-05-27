@@ -1,8 +1,8 @@
 // Authentication and authorization middleware.
 //
 // requireAuth: validates the Bearer token in the Authorization header,
-//   loads the user from the DB, and attaches them to req.user.
-// requireAdmin: assumes requireAuth has already run; rejects non-admins.
+// loads the user from the DB, and attaches them to req.user.
+// requireAdmin: assumes requireAuth has already run.
 
 const User = require("../models/User");
 const { verifyToken } = require("../utils/jwt");
@@ -21,7 +21,7 @@ async function requireAuth(req, res, next) {
 
     // Re-fetch the user every request rather than trusting the JWT payload
     // alone. This means a deleted or demoted user cannot keep using an old
-    // token: extra DB cost in exchange for current authorization data.
+    // token: extra DB cost in exchange for good authorisation practices.
     const user = await User.findById(payload.id);
     if (!user) {
       return res.status(401).json({ error: "Authentication required" });

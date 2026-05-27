@@ -4,10 +4,9 @@
 //   admin123 / admin123  (role: admin)
 //   demo     / demo123   (role: user)
 //
-// Beyond those two, the script generates 15–20 users total (≥2 admins),
+// Generates 15–20 users total (≥2 admins),
 // 30–60 expenses per user spread over the last 6 months, and ≥500 activity
 // entries covering login/logout, expense CRUD, and admin user-management.
-// The volume is here is to have realistic data for demo/testing
 //
 // Every collection is wiped first, then reseeded from scratch.
 // Usage: npm run seed   

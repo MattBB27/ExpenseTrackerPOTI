@@ -1,9 +1,9 @@
-// routes/auth.js — registration, login, logout, and current-user lookup.
+// routes/auth.js - registration, login, logout, and current-user lookup.
 //
-// POST /api/auth/register  → create a new user, return JWT + user
-// POST /api/auth/login     → verify credentials, return JWT + user
-// POST /api/auth/logout    → (mostly) no-op; client deletes its token
-// GET  /api/auth/me        → return the currently authenticated user
+// POST /api/auth/register  -> create a new user, return JWT + user
+// POST /api/auth/login     -> verify credentials, return JWT + user
+// POST /api/auth/logout    -> (mostly) no-op; client deletes its token
+// GET  /api/auth/me        -> return the currently authenticated user
 
 const express = require("express");
 const router = express.Router();
@@ -110,9 +110,8 @@ router.post("/login", async (req, res) => {
 
 // --- POST /api/auth/logout ---
 
-// With JWTs stored client-side, logout is essentially the client deleting its
-// token. The server-side hit exists so we can record a LOGOUT activity entry
-// for the audit log; the response shape is unchanged.
+// With JWTs stored client-side, the server-side hit exists so we can record a 
+// LOGOUT activity entry for the audit log; the response shape is unchanged.
 router.post("/logout", requireAuth, (req, res) => {
   logActivity({ userId: req.user._id, action: ACTIONS.LOGOUT });
   res.json({ message: "Logged out" });

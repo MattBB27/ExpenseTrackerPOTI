@@ -1,6 +1,6 @@
 // Registration form. Client-side validation mirrors the backend's rules
 // (username 3–30 chars, regex /^[a-z0-9_]+$/, password ≥ 6 chars). The
-// backend remains the source of truth — anything that slips past these
+// backend remains the source of truth - anything that slips past these
 // checks (e.g. a duplicate username) is surfaced from the API error.
 
 import React, { useState } from "react";

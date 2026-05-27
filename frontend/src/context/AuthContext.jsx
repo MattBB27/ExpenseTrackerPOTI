@@ -1,8 +1,7 @@
 // Global authentication state.
 //
-// Status is a single discriminated field: "loading" | "authenticated" |
-// "unauthenticated". Form-level concerns (submit-in-flight, field errors)
-// stay local to LoginForm / RegisterForm  (not in global state).
+// Status is a single discriminated field: "loading" | "authenticated" | "unauthenticated". 
+// Form-level concerns (submit-in-flight, field errors) stay local to LoginForm / RegisterForm  (not in global state).
 //
 // On mount we synchronously check localStorage for a token. No token -> we
 // transition straight to "unauthenticated". Token present -> call /api/auth/me to confirm
@@ -11,7 +10,7 @@
 //
 // The axios response interceptor fires `auth:expired` event
 // when an authenticated request comes back 401. Listens here and completes LOGOUT,
-// which routes the user back to the AuthScreen only when React next renders.
+// routing user back to AuthScreen (but only when react next renders)
 
 import React, {
   createContext,
@@ -78,7 +77,7 @@ export function AuthProvider({ children }) {
       .catch(() => {
         // The interceptor will already have cleared the token and fired
         // `auth:expired` on a 401. Non-401 errors also resolve to a 
-        // usable unauthenticated state instead of an indefinite spinner.
+        // usable unauthenticated state rather then permanent spinner
         localStorage.removeItem(TOKEN_KEY);
         dispatch({ type: "HYDRATE_FAILURE" });
       });
@@ -149,8 +148,7 @@ export function AuthProvider({ children }) {
 export function useAuth() {
   const ctx = useContext(AuthContext);
   if (!ctx) {
-    // A loud failure here saves an hour of debugging silent undefined reads
-    // when someone forgets to wrap a tree in <AuthProvider>.
+    // A failure when someone forgets to wrap a tree in <AuthProvider>.
     throw new Error("useAuth must be used inside <AuthProvider>");
   }
   return ctx;

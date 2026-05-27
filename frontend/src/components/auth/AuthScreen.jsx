@@ -1,5 +1,4 @@
-// Tab shell for the unauthenticated user: switches between login and
-// register. Branded to match the rest of the app.
+// Tab shell for the unauthenticated user: switches between login and register.
 
 import React, { useState } from "react";
 import LoginForm from "./LoginForm";
